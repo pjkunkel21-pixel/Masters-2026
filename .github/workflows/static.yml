@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masters Pool 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Bebas+Neue&family=EB+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #2d5a1b;
+  --green-dark: #1e3d12;
+  --green-light: #3a7023;
+  --board-white: #f5f2eb;
+  --board-off: #ebe6d9;
+  --red: #c91a1a;
+  --black: #0f0f0f;
+  --gold: #c9a84c;
+  --border: #c2baa8;
+  --cell-border: #c8bfac;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #1a3d10;
+  background-image:
+    repeating-linear-gradient(0deg,rgba(0,0,0,0.08) 0,rgba(0,0,0,0.08) 1px,transparent 1px,transparent 38px),
+    repeating-linear-gradient(90deg,rgba(0,0,0,0.06) 0,rgba(0,0,0,0.06) 1px,transparent 1px,transparent 38px);
+  min-height:100vh;
+  font-family:'Oswald',sans-serif;
+  padding:1.5rem 0.75rem 4rem;
+}
+
+/* PAGE HEADER */
+.page-hd { text-align:center; margin-bottom:1.4rem; }
+.page-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(2rem,5.5vw,3.8rem); color:var(--gold); letter-spacing:.14em; text-shadow:2px 3px 0 rgba(0,0,0,.55); line-height:1; }
+.page-sub { font-size:.72rem; letter-spacing:.28em; color:rgba(201,168,76,.55); margin-top:.3rem; text-transform:uppercase; }
+.live-badge { display:inline-flex; align-items:center; gap:.4rem; border:1px solid rgba(201,26,26,.55); border-radius:2px; padding:.18rem .65rem; font-size:.66rem; letter-spacing:.14em; color:#ff7070; margin-top:.55rem; }
+.live-dot { width:6px;height:6px;border-radius:50%;background:#ff7070;animation:blink 1.4s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* TABS */
+.nav-tabs { display:flex; justify-content:center; gap:.3rem; margin-bottom:1.4rem; flex-wrap:wrap; }
+.nav-tab { font-weight:700; font-size:.76rem; letter-spacing:.18em; text-transform:uppercase; padding:.5rem 1.1rem; background:rgba(0,0,0,.25); color:rgba(201,168,76,.5); border:2px solid rgba(201,168,76,.2); border-radius:2px; cursor:pointer; transition:all .18s; user-select:none; }
+.nav-tab:hover{color:var(--gold);border-color:rgba(201,168,76,.5);}
+.nav-tab.active{background:var(--green);color:var(--gold);border-color:var(--gold);}
+.nav-tab.commissioner { border-color:rgba(201,168,76,.45); color:rgba(201,168,76,.7); }
+.nav-tab.commissioner.active { background:rgba(100,50,0,.4); border-color:var(--gold); color:var(--gold); }
+
+/* BOARD SHELL */
+.board-shell { max-width:960px; margin:0 auto 2rem; background:var(--green); border-radius:10px 10px 5px 5px; padding:10px; box-shadow:0 10px 50px rgba(0,0,0,.75),0 0 0 3px #142a0c; }
+.board-arch { background:var(--board-white); border-radius:70px 70px 0 0/44px 44px 0 0; text-align:center; padding:.65rem 1.5rem .55rem; border-bottom:3px solid var(--cell-border); position:relative; }
+.board-arch::before,.board-arch::after { content:''; position:absolute; top:50%; transform:translateY(-50%); width:15px;height:15px;border-radius:50%; background:var(--green); border:2px solid #142a0c; }
+.board-arch::before{left:14px;} .board-arch::after{right:14px;}
+.arch-title { font-family:'Oswald',sans-serif; font-weight:700; font-size:clamp(1.4rem,3.5vw,2.3rem); letter-spacing:.28em; color:var(--black); text-transform:uppercase; line-height:1; }
+.arch-sub { font-size:.62rem; letter-spacing:.2em; color:rgba(15,15,15,.42); text-transform:uppercase; font-weight:600; margin-top:.2rem; }
+.board-inner { background:var(--board-white); overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.board-foot { background:var(--board-off); border-top:2px solid var(--cell-border); padding:.28rem .75rem; display:flex; justify-content:space-between; align-items:center; font-size:.62rem; letter-spacing:.1em; color:rgba(15,15,15,.42); font-weight:600; text-transform:uppercase; flex-wrap:wrap; gap:.3rem; }
+
+/* POOL TABLE */
+.pool-table { width:100%; border-collapse:collapse; background:var(--board-white); }
+.pool-table .ch { background:var(--board-off); font-weight:700; font-size:.64rem; letter-spacing:.14em; text-transform:uppercase; color:var(--black); padding:.4rem .65rem; border:1px solid var(--cell-border); text-align:right; white-space:nowrap; }
+.pool-table .ch.left { text-align:left; }
+.pool-table .ch.center { text-align:center; }
+.pool-row td { border:1px solid var(--cell-border); padding:.45rem .65rem; vertical-align:middle; }
+.pool-row:nth-child(even) td { background:rgba(0,0,0,.016); }
+.pool-row { cursor:pointer; }
+.pool-row:hover td { background:rgba(45,90,27,.07)!important; }
+.p-pos { font-weight:700; font-size:1.1rem; color:var(--black); text-align:center!important; width:2.4rem; background:var(--board-off)!important; }
+.p-pos.lead { color:var(--red); font-size:1.3rem; }
+.p-name { font-weight:700; font-size:clamp(.88rem,2vw,1.08rem); color:var(--black); letter-spacing:.04em; text-transform:uppercase; }
+.p-who { font-size:.68rem; font-weight:400; color:rgba(15,15,15,.42); letter-spacing:.07em; margin-top:.08rem; }
+.p-earn { font-weight:700; font-size:1.2rem; color:var(--red); text-align:right!important; white-space:nowrap; }
+.p-earn.zero { color:rgba(15,15,15,.4); font-size:.95rem; }
+.p-cap { font-size:.74rem; color:rgba(15,15,15,.38); font-weight:500; text-align:right!important; white-space:nowrap; }
+
+/* Expand */
+.exp-row { display:none; }
+.exp-row.open { display:table-row; }
+.exp-inner { background:var(--board-off); border:1px solid var(--cell-border); padding:.75rem 1rem .9rem 2.2rem; }
+.roster-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:.4rem; margin-bottom:.55rem; }
+.ri { background:var(--board-white); border:1px solid var(--cell-border); padding:.32rem .6rem; display:flex; justify-content:space-between; align-items:center; border-radius:2px; gap:.5rem; }
+.ri-left { min-width:0; }
+.ri-name { font-family:'Oswald',sans-serif; font-size:.8rem; font-weight:700; color:var(--black); text-transform:uppercase; letter-spacing:.03em; }
+.ri-pos  { font-family:'Oswald',sans-serif; font-size:.65rem; color:rgba(15,15,15,.4); }
+.ri-earn { font-family:'Oswald',sans-serif; font-size:.88rem; font-weight:700; color:var(--red); white-space:nowrap; }
+.ri-earn.zero { color:rgba(15,15,15,.35); font-size:.72rem; }
+.ri-earn.cut  { color:rgba(15,15,15,.3); font-size:.72rem; }
+.exp-meta { font-size:.62rem; letter-spacing:.1em; color:rgba(15,15,15,.38); text-transform:uppercase; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+
+/* LEADERBOARD */
+.lb-table { width:100%; border-collapse:collapse; min-width:420px; }
+.lb-table .hdr th { background:var(--board-off); font-weight:700; font-size:clamp(.58rem,1.5vw,.78rem); color:var(--black); text-align:center; padding:.38rem .3rem; border:1px solid var(--cell-border); letter-spacing:.06em; }
+.lb-table .hdr th.lbl { text-align:left; padding-left:.7rem; min-width:140px; }
+.lb-pr { border:1px solid var(--cell-border); text-align:center; padding:.3rem .22rem; font-family:'Oswald',sans-serif; font-size:clamp(.78rem,1.8vw,1rem); color:var(--red); }
+.lb-table tr.ev-row .lb-pr { background:rgba(0,0,0,.018); }
+.lb-pr.bkg  { background:var(--board-off)!important; color:var(--black)!important; }
+.lb-pr.name { text-align:left; padding-left:.7rem; font-weight:700; color:var(--black); font-size:clamp(.8rem,1.8vw,1.05rem); letter-spacing:.04em; white-space:nowrap; }
+.lb-pr.earn-cell { font-weight:700; font-size:clamp(.82rem,1.9vw,1.05rem); color:var(--red); }
+.lb-pr.dim  { color:var(--black)!important; opacity:.48; }
+.lb-pr.sm   { font-size:clamp(.56rem,1.2vw,.7rem)!important; color:var(--black)!important; opacity:.42; }
+.lb-pr.cut-earn { color:rgba(15,15,15,.35)!important; font-size:.72rem!important; }
+.star-mark  { color:var(--gold); font-size:.72rem; vertical-align:middle; margin-left:.3rem; }
+.highlighted .lb-pr.name { background:rgba(45,90,27,.07)!important; }
+.cut-divider td { font-size:.6rem; font-weight:700; letter-spacing:.12em; color:#888; background:rgba(0,0,0,.04); text-align:center; padding:.2rem; border-top:2px dashed var(--border); border-bottom:1px solid var(--cell-border); }
+
+/* COMMISSIONER PANEL */
+.comm-wrap { max-width:860px; margin:0 auto; }
+.comm-card { background:var(--board-white); border:8px solid var(--green); border-radius:5px; padding:1.4rem; margin-bottom:1.4rem; box-shadow:0 6px 35px rgba(0,0,0,.55); }
+.slabel { font-weight:700; font-size:.7rem; letter-spacing:.24em; text-transform:uppercase; color:rgba(15,15,15,.42); margin-bottom:.75rem; display:flex; align-items:center; gap:.7rem; }
+.slabel::after { content:''; flex:1; height:1px; background:var(--cell-border); }
+
+/* Steps */
+.steps { counter-reset:step; display:flex; flex-direction:column; gap:1.2rem; margin-bottom:1.4rem; }
+.step { display:flex; gap:1rem; align-items:flex-start; }
+.step-num { counter-increment:step; content:counter(step); min-width:2rem; height:2rem; border-radius:50%; background:var(--green); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem; flex-shrink:0; margin-top:.1rem; }
+.step-body { flex:1; }
+.step-title { font-weight:700; font-size:.88rem; color:var(--black); letter-spacing:.04em; text-transform:uppercase; margin-bottom:.25rem; }
+.step-desc { font-family:'EB Garamond',serif; font-size:.92rem; color:rgba(15,15,15,.65); line-height:1.5; }
+.step-desc code { font-family:monospace; background:var(--board-off); padding:.1rem .35rem; border-radius:2px; font-size:.82rem; color:var(--green-dark); border:1px solid var(--cell-border); }
+.step-desc a { color:var(--green-dark); font-weight:600; }
+
+/* Input / button styles */
+.board-inp { font-family:'Oswald',sans-serif; font-size:.9rem; font-weight:500; background:var(--board-off); border:2px solid var(--cell-border); border-radius:2px; color:var(--black); padding:.5rem .75rem; outline:none; transition:border-color .2s; width:100%; }
+.board-inp:focus { border-color:var(--green); }
+.board-inp::placeholder { color:rgba(15,15,15,.35); font-weight:400; }
+.inp-group { display:flex; gap:.6rem; align-items:stretch; flex-wrap:wrap; }
+.inp-group .board-inp { flex:1; min-width:200px; }
+.btn { font-family:'Oswald',sans-serif; font-weight:700; font-size:.78rem; letter-spacing:.18em; text-transform:uppercase; padding:.62rem 1.5rem; border:2px solid transparent; border-radius:2px; cursor:pointer; transition:all .18s; white-space:nowrap; }
+.btn-g { background:var(--green); color:#fff; border-color:var(--green-dark); }
+.btn-g:hover { background:var(--green-light); }
+.btn-g:disabled { opacity:.33; cursor:not-allowed; }
+.btn-o { background:transparent; color:var(--black); border-color:var(--cell-border); }
+.btn-o:hover { border-color:var(--green); color:var(--green-dark); }
+.btn-red { background:transparent; color:var(--red); border-color:rgba(201,26,26,.35); }
+.btn-red:hover { background:rgba(201,26,26,.07); border-color:var(--red); }
+.btn-sm { padding:.35rem .9rem; font-size:.68rem; }
+
+/* Sync status */
+.sync-status { background:var(--board-off); border:1px solid var(--cell-border); border-radius:2px; padding:.6rem .9rem; font-size:.78rem; font-family:'Oswald',sans-serif; letter-spacing:.08em; color:rgba(15,15,15,.55); display:flex; align-items:center; gap:.6rem; margin-top:.75rem; }
+.sync-dot { width:8px; height:8px; border-radius:50%; background:rgba(15,15,15,.25); flex-shrink:0; }
+.sync-dot.ok { background:#2d7a1a; }
+.sync-dot.err { background:var(--red); }
+.sync-dot.loading { background:var(--gold); animation:blink 1s infinite; }
+
+/* Entry preview table */
+.preview-table { width:100%; border-collapse:collapse; margin-top:.75rem; font-size:.82rem; }
+.preview-table th { background:var(--board-off); padding:.35rem .6rem; border:1px solid var(--cell-border); font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; text-align:left; }
+.preview-table td { padding:.35rem .6rem; border:1px solid var(--cell-border); vertical-align:top; }
+.preview-table tr:nth-child(even) td { background:rgba(0,0,0,.016); }
+.preview-table .del-btn { font-family:'Oswald',sans-serif; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; padding:.15rem .5rem; background:none; border:1px solid rgba(201,26,26,.3); border-radius:2px; color:rgba(201,26,26,.6); cursor:pointer; }
+.preview-table .del-btn:hover { border-color:var(--red); color:var(--red); }
+
+/* Golfer tag */
+.gtag { display:inline-block; background:var(--board-off); border:1px solid var(--cell-border); border-radius:2px; padding:.08rem .35rem; font-size:.68rem; font-family:'Oswald',sans-serif; font-weight:600; color:var(--black); margin:.1rem .1rem 0 0; }
+.gtag.invalid { border-color:rgba(201,26,26,.5); color:var(--red); background:rgba(201,26,26,.05); }
+
+/* Column mapping */
+.col-map { display:grid; grid-template-columns:1fr 1fr; gap:.5rem .8rem; margin:.6rem 0 .8rem; }
+.col-map-row { display:flex; align-items:center; gap:.5rem; }
+.col-map-label { font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:rgba(15,15,15,.55); min-width:80px; }
+.col-map select { font-family:'Oswald',sans-serif; font-size:.8rem; background:var(--board-off); border:2px solid var(--cell-border); border-radius:2px; color:var(--black); padding:.3rem .5rem; outline:none; flex:1; }
+.col-map select:focus { border-color:var(--green); }
+
+/* Empty / info */
+.empty { text-align:center; padding:2rem 1rem; background:var(--board-white); }
+.empty .ei { font-size:2.3rem; margin-bottom:.65rem; }
+.empty p { font-family:'EB Garamond',serif; font-style:italic; color:rgba(15,15,15,.42); font-size:.98rem; }
+.empty .ed { font-size:.68rem; letter-spacing:.18em; color:var(--green-dark); margin-top:.45rem; text-transform:uppercase; font-family:'Oswald',sans-serif; font-weight:600; }
+
+.info-box { background:rgba(45,90,27,.08); border:1px solid rgba(45,90,27,.25); border-radius:3px; padding:.65rem .9rem; font-family:'EB Garamond',serif; font-size:.9rem; color:rgba(15,15,15,.65); line-height:1.5; margin:.6rem 0; }
+.info-box strong { font-family:'Oswald',sans-serif; font-size:.78rem; letter-spacing:.08em; color:var(--green-dark); }
+
+.warn-box { background:rgba(201,168,76,.08); border:1px solid rgba(201,168,76,.35); border-radius:3px; padding:.65rem .9rem; font-family:'EB Garamond',serif; font-size:.88rem; color:rgba(15,15,15,.65); line-height:1.5; margin:.6rem 0; }
+
+/* Payout reference */
+.pay-row { display:flex; justify-content:space-between; border-bottom:1px solid var(--cell-border); padding:.2rem 0; font-size:.75rem; }
+.pay-pos { font-weight:700; color:var(--black); }
+.pay-amt { color:var(--red); font-weight:700; }
+
+/* Toast */
+.toast { position:fixed; bottom:1.4rem; right:1.4rem; background:var(--green-dark); border:2px solid var(--gold); border-radius:2px; padding:.55rem 1.1rem; font-size:.76rem; letter-spacing:.12em; color:var(--gold); z-index:100; transform:translateY(70px); opacity:0; transition:all .28s; }
+.toast.show { transform:translateY(0); opacity:1; }
+.site-foot { text-align:center; font-size:.62rem; letter-spacing:.25em; color:rgba(201,168,76,.28); text-transform:uppercase; margin-top:1.5rem; }
+.hidden { display:none!important; }
+.spinner { display:inline-block; width:14px;height:14px; border:2px solid rgba(201,168,76,.3); border-top-color:var(--gold); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; }
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:600px){
+  .pool-table .ch:nth-child(4),.pool-row td:nth-child(4){display:none;}
+  .col-map { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="page-hd">
+  <div class="page-title">Masters Pool 2026</div>
+  <div class="page-sub">Augusta National Golf Club &nbsp;·&nbsp; April 9–12, 2026</div>
+  <div id="live-badge" class="live-badge hidden"><span class="live-dot"></span><span id="live-txt">Live</span></div>
+</div>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" id="tab-pool"    onclick="showTab('pool')">Leaderboard</div>
+  <div class="nav-tab"        id="tab-payouts" onclick="showTab('payouts')">Payouts</div>
+  <div class="nav-tab commissioner" id="tab-comm" onclick="showTab('comm')">⚙ Commissioner</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- POOL LEADERBOARD (main view)                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="view-pool">
+  <div class="board-shell">
+    <div class="board-arch">
+      <div class="arch-title">Leaderboard</div>
+      <div class="arch-sub">Ranked by Total Earnings &nbsp;·&nbsp; All 6 Golfers Count &nbsp;·&nbsp; $50,000 Salary Cap</div>
+    </div>
+    <div class="board-inner" id="pool-inner"></div>
+    <div class="board-foot">
+      <span>★ In Pool &nbsp;·&nbsp; 2025 Payout Structure</span>
+      <span id="pool-upd">–</span>
+      <span>Tap entry to expand</span>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- PAYOUTS                                                 -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="view-payouts" class="hidden" style="max-width:960px;margin:0 auto;">
+  <div class="board-shell">
+    <div class="board-arch">
+      <div class="arch-title">Prize Money</div>
+      <div class="arch-sub">2025 Payout Structure · $21M Purse · Applied to 2026 Pool</div>
+    </div>
+    <div style="background:var(--board-white);padding:1rem 1.2rem;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.3rem .8rem;" id="payout-grid-full"></div>
+    </div>
+    <div class="board-foot"><span>Missed cut: $25,000 · Amateurs: $0</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- COMMISSIONER                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div id="view-comm" class="comm-wrap hidden">
+
+  <!-- PASSWORD GATE -->
+  <div id="comm-gate" class="comm-card" style="max-width:360px;margin:2rem auto;text-align:center;">
+    <div class="slabel" style="justify-content:center;">Commissioner Access</div>
+    <input type="password" class="board-inp" id="comm-pw" placeholder="Password…" style="text-align:center;margin-bottom:.75rem;letter-spacing:.2em;" onkeydown="if(event.key==='Enter')checkCommPw()">
+    <button class="btn btn-g" style="width:100%" onclick="checkCommPw()">Enter</button>
+    <div id="comm-pw-err" style="color:var(--red);font-size:.72rem;letter-spacing:.1em;margin-top:.5rem;display:none;">Incorrect password</div>
+  </div>
+
+  <!-- COMMISSIONER CONTENT (hidden until unlocked) -->
+  <div id="comm-content" class="hidden">
+
+  <!-- STEP 1: Google Form setup -->
+  <div class="comm-card">
+    <div class="slabel">Step 1 &nbsp;·&nbsp; Create the Google Form</div>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-body">
+        <div class="step-title">Create a new Google Form</div>
+        <div class="step-desc">Go to <a href="https://forms.google.com" target="_blank">forms.google.com</a> → click <strong>Blank form</strong>. Title it <em>"Masters Pool 2026 — Entry Submission"</em>.</div>
+      </div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-body">
+        <div class="step-title">Add these exact questions</div>
+        <div class="step-desc">Add one <strong>Short answer</strong> question for each field below. The column names matter for syncing:</div>
+        <div class="info-box" style="margin-top:.5rem;">
+          <strong>Entry Name</strong> — Short answer · Required<br>
+          <strong>Your Name</strong> — Short answer · Required<br>
+          <strong>Golfer 1</strong> — Dropdown · Required (paste golfer names from list below)<br>
+          <strong>Golfer 2</strong> — Dropdown · Required<br>
+          <strong>Golfer 3</strong> — Dropdown · Required<br>
+          <strong>Golfer 4</strong> — Dropdown · Required<br>
+          <strong>Golfer 5</strong> — Dropdown · Required<br>
+          <strong>Golfer 6</strong> — Dropdown · Required
+        </div>
+        <div class="warn-box" style="margin-top:.5rem;">
+          💡 <strong>Tip:</strong> For the Golfer selection question, use this list of eligible players so names match exactly when syncing:<br><br>
+          <span style="font-family:monospace;font-size:.75rem;line-height:2;">
+            Scottie Scheffler, Rory McIlroy, Bryson DeChambeau, Jon Rahm, Ludvig Aberg, Xander Schauffele, Collin Morikawa, Tommy Fleetwood, Cameron Young, Justin Rose, Patrick Reed, Hideki Matsuyama, Viktor Hovland, Matt Fitzpatrick, Robert MacIntyre, Brooks Koepka, Jordan Spieth, Justin Thomas, Shane Lowry, Tyrrell Hatton, Chris Gotterup, Sepp Straka, Patrick Cantlay, Russell Henley, Akshay Bhatia, Si Woo Kim, Min Woo Lee, Corey Conners, Ben Griffin, Jason Day, Cameron Smith, Sungjae Im, Nicolai Hojgaard, Jacob Bridgeman, Sam Burns, Jake Knapp, Harris English, Max Homa, Marco Penge, Gary Woodland, Adam Scott, J.J. Spaun, Maverick McNealy, Wyndham Clark, Ryan Fox, Sergio Garcia, Daniel Berger, Alex Noren, Dustin Johnson, Keegan Bradley, Tom McKibbin, Rasmus Hojgaard, Harry Hall, Kurt Kitayama, Ryan Gerard, Aaron Rai, Rasmus Neergaard-Petersen, John Keefer, Nicolas Echavarria, Michael Kim, Michael Brennan, Casey Jarvis, Carlos Ortiz, Max Greyserman, Sami Valimaki, Brian Harman, Nick Taylor, Tiger Woods, Matthew McCarty, Andrew Novak, Sam Stevens, Phil Mickelson, Davis Riley, Kristoffer Reitan, Hao-Tong Li, Charl Schwartzel, Bubba Watson, Zach Johnson, Aldrich Potgieter, Naoyuki Kataoka, Brian Campbell, Danny Willett, Jackson Herrington, Angel Cabrera, Ethan Fang, Brandon Holtz, Fifa Laopakdee, Vijay Singh, Mason Howell, Fred Couples, Mike Weir, Mateo Pulcini, Jose Maria Olazabal
+          </span>
+        </div>
+      </div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-body">
+        <div class="step-title">Link to Google Sheets</div>
+        <div class="step-desc">Click <strong>Responses</strong> tab → click the green <strong>Sheets icon</strong> → <em>Create a new spreadsheet</em>. This auto-populates a Sheet every time someone submits.</div>
+      </div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-body">
+        <div class="step-title">Publish the Sheet as CSV</div>
+        <div class="step-desc">In the Google Sheet: <strong>File → Share → Publish to web</strong> → choose <em>Sheet1</em> → format <em>Comma-separated values (.csv)</em> → click <strong>Publish</strong>. Copy the URL it gives you.</div>
+      </div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-body">
+        <div class="step-title">Paste the URL below and sync</div>
+        <div class="step-desc">Paste your published CSV URL into Step 2 below. Every time you click <strong>Sync from Sheet</strong>, the app pulls the latest entries.</div>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Sheet URL + sync -->
+  <div class="comm-card">
+    <div class="slabel">Step 2 &nbsp;·&nbsp; Connect Your Google Sheet</div>
+
+    <div class="inp-group" style="margin-bottom:.6rem;">
+      <input type="text" class="board-inp" id="sheet-url" placeholder="Paste your published CSV URL here…">
+      <button class="btn btn-g" onclick="syncSheet()"><span id="sync-spinner" class="spinner hidden"></span> Sync from Sheet</button>
+    </div>
+
+    <div class="sync-status" id="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-msg">Not connected · Paste your Sheet URL above</span>
+    </div>
+
+    <!-- Column mapping (shown after first sync) -->
+    <div id="col-mapping-wrap" class="hidden" style="margin-top:1rem;">
+      <div class="slabel" style="margin-top:.5rem;">Column Mapping</div>
+      <div class="info-box">Match each field to the column name in your Sheet. These are auto-detected but you can adjust if needed.</div>
+      <div class="col-map" id="col-map"></div>
+      <button class="btn btn-g btn-sm" onclick="applyMapping()">Apply Mapping &amp; Import Entries</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: Entry preview + management -->
+  <div class="comm-card" id="entry-mgmt-card">
+    <div class="slabel">Step 3 &nbsp;·&nbsp; Review &amp; Manage Entries</div>
+
+    <div id="entry-preview-wrap">
+      <div class="empty" style="padding:1.5rem;">
+        <div class="ei" style="font-size:1.6rem;">📋</div>
+        <p>No entries loaded yet. Sync your Sheet above.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem;">
+      <button class="btn btn-o btn-sm" onclick="addManualEntry()">+ Add Entry Manually</button>
+      <button class="btn btn-red btn-sm" onclick="clearAllEntries()">Clear All Entries</button>
+      <button class="btn btn-o btn-sm" onclick="exportEntries()">Export JSON</button>
+      <button class="btn btn-o btn-sm" onclick="importEntries()">Import JSON</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" class="hidden" onchange="handleImport(event)">
+  </div>
+
+  <!-- Manual entry form (hidden by default) -->
+  <div class="comm-card hidden" id="manual-entry-card">
+    <div class="slabel">Add Entry Manually</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.8rem;">
+      <input type="text" class="board-inp" id="m-entry-name" placeholder="Entry name">
+      <input type="text" class="board-inp" id="m-your-name"  placeholder="Entrant name">
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem;margin-bottom:.8rem;">
+      <select class="board-inp" id="m-g1"><option value="">Golfer 1…</option></select>
+      <select class="board-inp" id="m-g2"><option value="">Golfer 2…</option></select>
+      <select class="board-inp" id="m-g3"><option value="">Golfer 3…</option></select>
+      <select class="board-inp" id="m-g4"><option value="">Golfer 4…</option></select>
+      <select class="board-inp" id="m-g5"><option value="">Golfer 5…</option></select>
+      <select class="board-inp" id="m-g6"><option value="">Golfer 6…</option></select>
+    </div>
+    <div style="display:flex;gap:.6rem;">
+      <button class="btn btn-g btn-sm" onclick="saveManualEntry()">Save Entry</button>
+      <button class="btn btn-o btn-sm" onclick="cancelManualEntry()">Cancel</button>
+    </div>
+  </div>
+
+  </div><!-- /comm-content -->
+
+</div><!-- /comm-wrap -->
+
+<div class="site-foot">A Tradition Unlike Any Other &nbsp;·&nbsp; Masters Pool 2026</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// PAYOUT TABLE (2025 Masters · $21M purse)
+// ============================================================
+const PAYOUT_DISPLAY = [
+  {label:'1st',    amt:4200000},
+  {label:'2nd',    amt:2268000},
+  {label:'3rd',    amt:1428000},
+  {label:'4th',    amt:1008000},
+  {label:'T-5th',  amt:798000},
+  {label:'7th',    amt:703500},
+  {label:'T-8th',  amt:588000},
+  {label:'T-12th', amt:462000},
+  {label:'T-14th', amt:336000},
+  {label:'T-21st', amt:210000},
+  {label:'T-27th', amt:158550},
+  {label:'T-29th', amt:142800},
+  {label:'T-32nd', amt:121538},
+  {label:'T-36th', amt:101063},
+  {label:'T-40th', amt:88200},
+  {label:'T-42nd', amt:75600},
+  {label:'T-46th', amt:61180},
+  {label:'49th',   amt:54600},
+  {label:'50th',   amt:52920},
+  {label:'51st+',  amt:51660, note:'descending'},
+  {label:'Missed Cut', amt:25000},
+  {label:'Amateur',    amt:0},
+];
+
+// Position → earnings lookup
+const POS_BRACKETS = [
+  [1,4200000],[2,2268000],[3,1428000],[4,1008000],
+  [6,798000],[7,703500],[11,588000],[13,462000],
+  [20,336000],[26,210000],[28,158550],[31,142800],
+  [35,121538],[39,101063],[41,88200],[45,75600],
+  [48,61180],[49,54600],[50,52920],[999,51660]
+];
+function payoutForPos(pos, cut) {
+  if (cut) return 25000;
+  if (!pos || pos <= 0) return 0;
+  for (const [maxPos, amt] of POS_BRACKETS) {
+    if (pos <= maxPos) return amt;
+  }
+  return Math.max(25001, 51660 - (pos - 51) * 450);
+}
+
+function fmtMoney(n) {
+  if (!n) return '$0';
+  if (n >= 1000000) return '$' + (n/1000000).toFixed(n%1000000===0?0:2).replace(/\.?0+$/,'') + 'M';
+  if (n >= 1000) return '$' + Math.round(n/1000) + 'K';
+  return '$' + n.toLocaleString();
+}
+function fmtMoneyFull(n) { return n ? '$' + n.toLocaleString() : '$0'; }
+
+// ============================================================
+// GOLFERS ROSTER (2026 Masters · DraftKings Salaries)
+// ============================================================
+const BUDGET = 50000;
+const GOLFERS = [
+  {id:1,  name:"Scottie Scheffler",           last:"SCHEFFLER",        salary:14000},
+  {id:2,  name:"Rory McIlroy",                last:"McILROY",          salary:11600},
+  {id:3,  name:"Bryson DeChambeau",           last:"DeCHAMBEAU",       salary:10200},
+  {id:4,  name:"Jon Rahm",                    last:"RAHM",             salary:10000},
+  {id:5,  name:"Ludvig Aberg",                last:"ÅBERG",            salary:9800},
+  {id:6,  name:"Xander Schauffele",           last:"SCHAUFFELE",       salary:9600},
+  {id:7,  name:"Collin Morikawa",             last:"MORIKAWA",         salary:9500},
+  {id:8,  name:"Tommy Fleetwood",             last:"FLEETWOOD",        salary:9300},
+  {id:9,  name:"Cameron Young",               last:"YOUNG",            salary:9200},
+  {id:10, name:"Justin Rose",                 last:"ROSE",             salary:9100},
+  {id:11, name:"Patrick Reed",                last:"REED",             salary:9000},
+  {id:12, name:"Hideki Matsuyama",            last:"MATSUYAMA",        salary:8900},
+  {id:13, name:"Viktor Hovland",              last:"HOVLAND",          salary:8800},
+  {id:14, name:"Matt Fitzpatrick",            last:"FITZPATRICK",      salary:8700},
+  {id:15, name:"Robert MacIntyre",            last:"MacINTYRE",        salary:8600},
+  {id:16, name:"Brooks Koepka",               last:"KOEPKA",           salary:8500},
+  {id:17, name:"Jordan Spieth",               last:"SPIETH",           salary:8400},
+  {id:18, name:"Justin Thomas",               last:"THOMAS",           salary:8300},
+  {id:19, name:"Shane Lowry",                 last:"LOWRY",            salary:8200},
+  {id:20, name:"Tyrrell Hatton",              last:"HATTON",           salary:8100},
+  {id:21, name:"Chris Gotterup",              last:"GOTTERUP",         salary:8000},
+  {id:22, name:"Sepp Straka",                 last:"STRAKA",           salary:8000},
+  {id:23, name:"Patrick Cantlay",             last:"CANTLAY",          salary:7900},
+  {id:24, name:"Russell Henley",              last:"HENLEY",           salary:7900},
+  {id:25, name:"Akshay Bhatia",               last:"BHATIA",           salary:7800},
+  {id:26, name:"Si Woo Kim",                  last:"KIM",              salary:7800},
+  {id:27, name:"Min Woo Lee",                 last:"LEE",              salary:7700},
+  {id:28, name:"Corey Conners",               last:"CONNERS",          salary:7700},
+  {id:29, name:"Ben Griffin",                 last:"GRIFFIN",          salary:7600},
+  {id:30, name:"Jason Day",                   last:"DAY",              salary:7600},
+  {id:31, name:"Cameron Smith",               last:"SMITH",            salary:7500},
+  {id:32, name:"Sungjae Im",                  last:"IM",               salary:7500},
+  {id:33, name:"Nicolai Hojgaard",            last:"N. HOJGAARD",      salary:7500},
+  {id:34, name:"Jacob Bridgeman",             last:"BRIDGEMAN",        salary:7400},
+  {id:35, name:"Sam Burns",                   last:"BURNS",            salary:7400},
+  {id:36, name:"Jake Knapp",                  last:"KNAPP",            salary:7400},
+  {id:37, name:"Harris English",              last:"ENGLISH",          salary:7300},
+  {id:38, name:"Max Homa",                    last:"HOMA",             salary:7300},
+  {id:39, name:"Marco Penge",                 last:"PENGE",            salary:7300},
+  {id:40, name:"Gary Woodland",               last:"WOODLAND",         salary:7300},
+  {id:41, name:"Adam Scott",                  last:"SCOTT",            salary:7200},
+  {id:42, name:"J.J. Spaun",                  last:"SPAUN",            salary:7200},
+  {id:43, name:"Maverick McNealy",            last:"McNEALY",          salary:7200},
+  {id:44, name:"Wyndham Clark",               last:"CLARK",            salary:7100},
+  {id:45, name:"Ryan Fox",                    last:"FOX",              salary:7100},
+  {id:46, name:"Sergio Garcia",               last:"GARCIA",           salary:7100},
+  {id:47, name:"Daniel Berger",               last:"BERGER",           salary:7100},
+  {id:48, name:"Alex Noren",                  last:"NOREN",            salary:7000},
+  {id:49, name:"Dustin Johnson",              last:"JOHNSON",          salary:7000},
+  {id:50, name:"Keegan Bradley",              last:"BRADLEY",          salary:7000},
+  {id:51, name:"Tom McKibbin",                last:"McKIBBIN",         salary:6900},
+  {id:52, name:"Rasmus Hojgaard",             last:"R. HOJGAARD",      salary:6900},
+  {id:53, name:"Harry Hall",                  last:"HALL",             salary:6900},
+  {id:54, name:"Kurt Kitayama",               last:"KITAYAMA",         salary:6800},
+  {id:55, name:"Ryan Gerard",                 last:"GERARD",           salary:6800},
+  {id:56, name:"Aaron Rai",                   last:"RAI",              salary:6800},
+  {id:57, name:"Rasmus Neergaard-Petersen",   last:"NEERGAARD-PETERSEN",salary:6700},
+  {id:58, name:"John Keefer",                 last:"KEEFER",           salary:6700},
+  {id:59, name:"Nicolas Echavarria",          last:"ECHAVARRIA",       salary:6700},
+  {id:60, name:"Michael Kim",                 last:"M. KIM",           salary:6700},
+  {id:61, name:"Michael Brennan",             last:"BRENNAN",          salary:6600},
+  {id:62, name:"Casey Jarvis",                last:"JARVIS",           salary:6600},
+  {id:63, name:"Carlos Ortiz",                last:"ORTIZ",            salary:6600},
+  {id:64, name:"Max Greyserman",              last:"GREYSERMAN",       salary:6600},
+  {id:65, name:"Sami Valimaki",               last:"VALIMAKI",         salary:6500},
+  {id:66, name:"Brian Harman",                last:"HARMAN",           salary:6500},
+  {id:67, name:"Nick Taylor",                 last:"TAYLOR",           salary:6500},
+  {id:68, name:"Tiger Woods",                 last:"WOODS",            salary:6500},
+  {id:69, name:"Matthew McCarty",             last:"McCARTY",          salary:6500},
+  {id:70, name:"Andrew Novak",                last:"NOVAK",            salary:6400},
+  {id:71, name:"Sam Stevens",                 last:"STEVENS",          salary:6400},
+  {id:72, name:"Phil Mickelson",              last:"MICKELSON",        salary:6400},
+  {id:73, name:"Davis Riley",                 last:"RILEY",            salary:6400},
+  {id:74, name:"Kristoffer Reitan",           last:"REITAN",           salary:6300},
+  {id:75, name:"Hao-Tong Li",                 last:"LI",               salary:6300},
+  {id:76, name:"Charl Schwartzel",            last:"SCHWARTZEL",       salary:6300},
+  {id:77, name:"Bubba Watson",                last:"WATSON",           salary:6300},
+  {id:78, name:"Zach Johnson",                last:"Z. JOHNSON",       salary:6300},
+  {id:79, name:"Aldrich Potgieter",           last:"POTGIETER",        salary:6200},
+  {id:80, name:"Naoyuki Kataoka",             last:"KATAOKA",          salary:6200},
+  {id:81, name:"Brian Campbell",              last:"CAMPBELL",         salary:6200},
+  {id:82, name:"Danny Willett",               last:"WILLETT",          salary:6200},
+  {id:83, name:"Jackson Herrington",          last:"HERRINGTON",       salary:6200},
+  {id:84, name:"Angel Cabrera",               last:"CABRERA",          salary:6100},
+  {id:85, name:"Ethan Fang",                  last:"FANG",             salary:6100},
+  {id:86, name:"Brandon Holtz",               last:"HOLTZ",            salary:6100},
+  {id:87, name:"Fifa Laopakdee",              last:"LAOPAKDEE",        salary:6100},
+  {id:88, name:"Vijay Singh",                 last:"SINGH",            salary:6100},
+  {id:89, name:"Mason Howell",                last:"HOWELL",           salary:6000},
+  {id:90, name:"Fred Couples",                last:"COUPLES",          salary:6000},
+  {id:91, name:"Mike Weir",                   last:"WEIR",             salary:6000},
+  {id:92, name:"Mateo Pulcini",               last:"PULCINI",          salary:6000},
+  {id:93, name:"Jose Maria Olazabal",         last:"OLAZABAL",         salary:6000},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let entries  = JSON.parse(localStorage.getItem('mp26_entries') || '[]');
+let mScores  = {};
+let sheetCols = null;   // detected column headers from last CSV parse
+let rawSheetRows = [];  // raw parsed rows
+let lastFetch = null;
+const REFRESH = 90000;
+
+// ============================================================
+// TABS
+// ============================================================
+function checkCommPw() {
+  const val = document.getElementById('comm-pw').value;
+  const err = document.getElementById('comm-pw-err');
+  if (val === 'Rosie') {
+    document.getElementById('comm-gate').classList.add('hidden');
+    document.getElementById('comm-content').classList.remove('hidden');
+    err.style.display = 'none';
+  } else {
+    err.style.display = 'block';
+    document.getElementById('comm-pw').value = '';
+    document.getElementById('comm-pw').focus();
+  }
+}
+
+function showTab(t) {
+  ['pool','payouts','comm'].forEach(x => {
+    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+  });
+  document.getElementById('view-pool').classList.toggle('hidden', t!=='pool');
+  document.getElementById('view-payouts').classList.toggle('hidden', t!=='payouts');
+  document.getElementById('view-comm').classList.toggle('hidden', t!=='comm');
+  if (t==='comm') {
+    document.getElementById('comm-gate').classList.remove('hidden');
+    document.getElementById('comm-content').classList.add('hidden');
+    document.getElementById('comm-pw').value = '';
+    document.getElementById('comm-pw-err').style.display = 'none';
+    setTimeout(()=>document.getElementById('comm-pw').focus(), 50);
+  }
+  if (t==='pool')    { fetchScores(true); renderPool(); }
+  if (t==='payouts') renderPayoutTab();
+}
+
+// ============================================================
+// POOL RENDER
+// ============================================================
+function getPlayerData(golferId) {
+  const g = GOLFERS.find(x=>x.id===golferId);
+  if (!g) return {earnings:0, posStr:'–', thru:'–', cut:false};
+  return mScores[g.name] || {earnings:0, posStr:'–', thru:'–', cut:false};
+}
+
+function calcEntry(e) {
+  const rows = e.players.map(id => {
+    const d = getPlayerData(id);
+    return {id, earnings: d.earnings||0, total: typeof d.total === 'number' ? d.total : null, data: d};
+  });
+  const total = rows.reduce((s,r)=>s+r.earnings, 0);
+  const scoredPlayers = rows.filter(r => r.total !== null && !r.data.cut);
+  const scoreToPar = scoredPlayers.length > 0 ? rows.reduce((s,r) => {
+    if (r.data.cut) return s + 0; // missed cut counts as 0 relative contribution
+    return s + (typeof r.total === 'number' ? r.total : 0);
+  }, 0) : null;
+  return {total, rows, scoreToPar};
+}
+
+function renderPool() {
+  const inn = document.getElementById('pool-inner');
+  if (!entries.length) {
+    inn.innerHTML = `<div class="empty"><div class="ei">🏆</div><p>No entries yet. Commissioner: sync from Google Sheets in the ⚙ tab.</p><div class="ed">Tournament · April 9, 2026</div></div>`;
+    document.getElementById('pool-upd').textContent = '–';
+    return;
+  }
+  const scored = entries.map(e=>({...e, calc:calcEntry(e)})).sort((a,b)=>b.calc.total-a.calc.total);
+  let pos = 1;
+  const rows = scored.map((e,i)=>{
+    if (i>0 && scored[i].calc.total !== scored[i-1].calc.total) pos = i+1;
+    const p = pos;
+    const posDisp = (i===0 || scored[i].calc.total!==scored[i-1].calc.total) ? p : 'T'+p;
+    const total = e.calc.total;
+    const spent = e.salary || 0;
+
+    const stp = e.calc.scoreToPar;
+    const stpDisp = stp === null ? '–' : (stp === 0 ? 'E' : (stp > 0 ? '+'+stp : ''+stp));
+    const stpClass = stp === null ? '' : (stp < 0 ? 'style="color:var(--red);font-weight:700"' : stp > 0 ? 'style="color:var(--black);font-weight:700"' : 'style="color:var(--black);font-weight:700"');
+
+    return `
+    <tr class="pool-row" onclick="toggleExp('ex${e.id}')">
+      <td class="p-pos${p===1?' lead':''}">${posDisp}</td>
+      <td>
+        <div class="p-name">${e.teamName}</div>
+        ${e.entrantName ? `<div class="p-who">${e.entrantName}</div>` : ''}
+      </td>
+      <td class="p-earn" style="font-size:1rem;text-align:right" ${stpClass}>${stpDisp}</td>
+      <td class="p-earn${total===0?' zero':''}">${total>0 ? fmtMoneyFull(total) : '–'}</td>
+      <td class="p-cap">$${(BUDGET-spent).toLocaleString()} left</td>
+    </tr>
+    <tr class="exp-row" id="ex${e.id}"><td colspan="5"><div class="exp-inner">
+      <div class="roster-grid">
+        ${e.calc.rows.sort((a,b)=>b.earnings-a.earnings).map(r=>{
+          const g = GOLFERS.find(x=>x.id===r.id);
+          const d = r.data;
+          const earnClass = r.earnings===0 ? (d.cut?'cut':'zero') : '';
+          return `<div class="ri">
+            <div class="ri-left">
+              <div class="ri-name">${g ? g.last : '?'}</div>
+              <div class="ri-pos">${d.posStr||'–'}${d.thru&&d.thru!=='–'?' · Thru '+d.thru:''}</div>
+            </div>
+            <div class="ri-earn${earnClass?' '+earnClass:''}">${d.cut?'$25,000':r.earnings>0?fmtMoneyFull(r.earnings):'–'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="exp-meta">
+        <span>All 6 golfers count</span>
+        <span>$${spent.toLocaleString()} salary used · $${(BUDGET-spent).toLocaleString()} left</span>
+      </div>
+    </div></td></tr>`;
+  }).join('');
+
+  inn.innerHTML = `<table class="pool-table">
+    <thead><tr>
+      <th class="ch center" style="width:2.4rem">Pos</th>
+      <th class="ch left">Entry</th>
+      <th class="ch">Score</th>
+      <th class="ch">Total Earnings</th>
+      <th class="ch">Salary Left</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+  document.getElementById('pool-upd').textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+function toggleExp(id) { const r=document.getElementById(id); if(r) r.classList.toggle('open'); }
+
+// ============================================================
+// FETCH MASTERS SCORES
+// ============================================================
+async function fetchScores(force=false) {
+  if (!force && lastFetch && Date.now()-lastFetch < REFRESH) return;
+  lastFetch = Date.now();
+  try {
+    const URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?tournamentId=401811941';
+    const resp = await fetch(URL);
+    if (!resp.ok) throw new Error('ESPN fetch failed');
+    const data = await resp.json();
+
+    const tourn = data.tournaments?.[0] || data;
+    const competitors = tourn.leaderboard || tourn.competitors || [];
+    if (!competitors.length) return;
+
+    // Determine tournament status
+    const status = tourn.status?.type?.name || tourn.status?.type?.description || '';
+    const round  = tourn.currentRound || tourn.round || 0;
+    const isLive = /progress/i.test(status) || /active/i.test(status);
+    const isDone = /final|complete/i.test(status);
+
+    mScores = {};
+    competitors.forEach(c => {
+      const name = c.athlete?.displayName || c.displayName || '';
+      if (!name) return;
+
+      // Position
+      const posRaw = c.sortOrder || c.standing?.rank || 999;
+      const posStr = c.status === 'cut' ? 'CUT' : (c.displayValue || c.standing?.displayValue || String(posRaw));
+      const isCut  = c.status === 'cut' || posStr === 'CUT';
+
+      // Score to par (total)
+      const total = typeof c.totalScore === 'number' ? c.totalScore
+                  : typeof c.score?.value === 'number' ? c.score.value
+                  : parseInt(c.linescores?.reduce((s,l)=>s+(l.value||0),0)||0);
+
+      // Today's score
+      const today = typeof c.linescores === 'object'
+        ? (c.linescores?.[round-1]?.value ?? 0)
+        : 0;
+
+      // Thru
+      const thru = c.thru || c.status || '--';
+
+      mScores[name] = {
+        name, pos: posRaw, posStr, total, today,
+        thru: thru === '18' ? 'F' : thru,
+        cut: isCut,
+        earnings: payoutForPos(isCut ? 999 : posRaw, isCut)
+      };
+    });
+
+    renderPool();
+    const st = isDone ? 'completed' : isLive ? 'in_progress' : 'not_started';
+    updateBadge(st, round);
+  } catch(err) {
+    console.warn('Score fetch error:', err);
+  }
+}
+
+function updateBadge(status, round) {
+  const b=document.getElementById('live-badge'), t=document.getElementById('live-txt');
+  b.classList.remove('hidden');
+  if (status==='in_progress') { t.textContent=`Live · Round ${round}`; }
+  else if (status==='completed') { t.textContent='Final'; b.querySelector('.live-dot').style.animation='none'; }
+  else b.classList.add('hidden');
+}
+
+// ============================================================
+// PAYOUT TAB
+// ============================================================
+function renderPayoutTab() {
+  const g = document.getElementById('payout-grid-full');
+  if (!g) return;
+  g.innerHTML = PAYOUT_DISPLAY.map(p=>`
+    <div class="pay-row">
+      <span class="pay-pos">${p.label}</span>
+      <span class="pay-amt">${p.amt>0?fmtMoneyFull(p.amt):'$0'}${p.note?` <small style="color:rgba(15,15,15,.4)">(${p.note})</small>`:''}</span>
+    </div>`).join('');
+}
+
+// ============================================================
+// GOOGLE SHEET SYNC
+// ============================================================
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-msg');
+  dot.className = 'sync-dot' + (state ? ' '+state : '');
+  txt.textContent = msg;
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return { headers:[], rows:[] };
+  const headers = lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,''));
+  const rows = lines.slice(1).map(line => {
+    // Handle quoted fields with commas
+    const fields = [];
+    let cur = '', inQ = false;
+    for (let i=0; i<line.length; i++) {
+      if (line[i]==='"') { inQ=!inQ; }
+      else if (line[i]===',' && !inQ) { fields.push(cur.trim()); cur=''; }
+      else cur += line[i];
+    }
+    fields.push(cur.trim());
+    const obj = {};
+    headers.forEach((h,i) => { obj[h] = (fields[i]||'').replace(/^"|"$/g,'').trim(); });
+    return obj;
+  }).filter(r => Object.values(r).some(v=>v)); // skip empty rows
+  return { headers, rows };
+}
+
+async function syncSheet() {
+  const url = document.getElementById('sheet-url').value.trim();
+  if (!url) { setSyncStatus('err','Please paste your published CSV URL first'); return; }
+
+  // Save URL for next time
+  localStorage.setItem('mp26_sheetUrl', url);
+
+  setSyncStatus('loading','Fetching sheet data…');
+  document.getElementById('sync-spinner').classList.remove('hidden');
+
+  try {
+    // Use a CORS proxy since Google Sheets published URLs don't always support CORS
+    // Try direct first, then proxy
+    let csvText = null;
+    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    try {
+      const r = await fetch(url);
+      if (r.ok) csvText = await r.text();
+    } catch(e) {}
+
+    if (!csvText) {
+      const r = await fetch(proxyUrl);
+      if (!r.ok) throw new Error('Could not fetch sheet. Check the URL and make sure it is published.');
+      csvText = await r.text();
+    }
+
+    const parsed = parseCSV(csvText);
+    if (!parsed.headers.length) throw new Error('Empty sheet or could not parse CSV');
+
+    sheetCols = parsed.headers;
+    rawSheetRows = parsed.rows;
+
+    setSyncStatus('ok', `Sheet fetched · ${parsed.rows.length} response${parsed.rows.length!==1?'s':''} found · ${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}`);
+
+    // Auto-detect column mapping
+    showColumnMapping(parsed.headers);
+
+  } catch(err) {
+    setSyncStatus('err', 'Error: ' + err.message);
+  }
+  document.getElementById('sync-spinner').classList.add('hidden');
+}
+
+function showColumnMapping(headers) {
+  const wrap = document.getElementById('col-mapping-wrap');
+  const map  = document.getElementById('col-map');
+  wrap.classList.remove('hidden');
+
+  // Auto-detect best matching column
+  function bestMatch(label, hdrs) {
+    const l = label.toLowerCase().replace(/\s/g,'');
+    let m = hdrs.find(h=>h.toLowerCase().replace(/\s/g,'')=== l);
+    if (m) return m;
+    m = hdrs.find(h=>h.toLowerCase().includes(label.toLowerCase()));
+    if (m) return m;
+    const num = label.match(/\d+/);
+    if (num) m = hdrs.find(h=>h.toLowerCase().includes('golfer')&&h.includes(num[0]));
+    if (m) return m;
+    return hdrs[0]||'';
+  }
+
+  // Detect single-column golfer format (e.g. "Select 6 Golfers" checkbox question)
+  const singleGolferCol = headers.find(h =>
+    /select.*(golfer|player)/i.test(h) ||
+    /(golfer|player)s/i.test(h) ||
+    /pick.*(golfer|player)/i.test(h)
+  );
+  window._singleGolferCol = singleGolferCol || null;
+
+  const nameFields = [
+    {key:'entryName', label:'Entry Name'},
+    {key:'yourName',  label:'Your Name'},
+  ];
+
+  const golferFields = singleGolferCol ? [
+    {key:'golfersAll', label:'Golfers (all 6)'}
+  ] : [
+    {key:'golfer1', label:'Golfer 1'},
+    {key:'golfer2', label:'Golfer 2'},
+    {key:'golfer3', label:'Golfer 3'},
+    {key:'golfer4', label:'Golfer 4'},
+    {key:'golfer5', label:'Golfer 5'},
+    {key:'golfer6', label:'Golfer 6'},
+  ];
+
+  const allFields = [...nameFields, ...golferFields];
+
+  map.innerHTML = allFields.map(f=>{
+    const detected = f.key==='golfersAll' ? singleGolferCol : bestMatch(f.label, headers);
+    return `<div class="col-map-row">
+      <span class="col-map-label">${f.label}</span>
+      <select id="map-${f.key}">
+        ${headers.map(h=>`<option value="${h}" ${h===detected?'selected':''}>${h}</option>`).join('')}
+      </select>
+    </div>`;
+  }).join('');
+}
+
+function applyMapping() {
+  if (!rawSheetRows.length) { toast('No sheet data loaded'); return; }
+
+  const singleCol = window._singleGolferCol;
+  const mapping = {
+    entryName:  document.getElementById('map-entryName').value,
+    yourName:   document.getElementById('map-yourName').value,
+    golfersAll: singleCol ? document.getElementById('map-golfersAll').value : null,
+    golfer1:    !singleCol ? document.getElementById('map-golfer1').value : null,
+    golfer2:    !singleCol ? document.getElementById('map-golfer2').value : null,
+    golfer3:    !singleCol ? document.getElementById('map-golfer3').value : null,
+    golfer4:    !singleCol ? document.getElementById('map-golfer4').value : null,
+    golfer5:    !singleCol ? document.getElementById('map-golfer5').value : null,
+    golfer6:    !singleCol ? document.getElementById('map-golfer6').value : null,
+  };
+
+  const imported = [];
+  const errors = [];
+
+  rawSheetRows.forEach((row, ri) => {
+    // Use entrant name as team name since form has no separate team name field
+    const entrantName = row[mapping.yourName]||'';
+    const teamName    = row[mapping.entryName] || entrantName;
+    if (!teamName) return;
+
+    // Support both single-cell "Name1, Name2, ..." and separate golfer columns
+    let golferNames;
+    if (singleCol && mapping.golfersAll) {
+      const raw = row[mapping.golfersAll]||'';
+      golferNames = raw.split(',').map(s=>s.trim()).filter(Boolean);
+    } else {
+      golferNames = [1,2,3,4,5,6].map(n => row[mapping['golfer'+n]]||'');
+    }
+    const playerIds = [];
+    const invalidNames = [];
+
+    golferNames.forEach(gn => {
+      if (!gn) return;
+      // fuzzy match
+      const g = GOLFERS.find(x =>
+        x.name.toLowerCase() === gn.toLowerCase() ||
+        x.last.toLowerCase() === gn.toLowerCase() ||
+        x.name.toLowerCase().includes(gn.toLowerCase()) ||
+        gn.toLowerCase().includes(x.name.split(' ').pop().toLowerCase())
+      );
+      if (g) playerIds.push(g.id);
+      else invalidNames.push(gn);
+    });
+
+    const salary = playerIds.reduce((s,id)=>{const g=GOLFERS.find(x=>x.id===id); return s+(g?g.salary:0);},0);
+
+    if (playerIds.length !== 6) {
+      errors.push(`Row ${ri+2}: "${teamName}" — could not match: ${invalidNames.join(', ')}`);
+    }
+
+    imported.push({
+      id: Date.now() + ri,
+      teamName, entrantName,
+      players: playerIds,
+      salary,
+      source: 'sheet',
+      warnings: invalidNames.length ? invalidNames : undefined
+    });
+  });
+
+  // Merge: replace sheet-sourced entries, keep manual ones
+  const manual = entries.filter(e=>e.source!=='sheet');
+  entries = [...manual, ...imported];
+  save();
+  renderPool();
+  renderEntryPreview();
+
+  let msg = `Imported ${imported.length} entr${imported.length!==1?'ies':'y'} from Sheet`;
+  if (errors.length) msg += ` · ${errors.length} warning${errors.length!==1?'s':''} (check preview)`;
+  toast(msg);
+  setSyncStatus('ok', msg + ' · ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}));
+}
+
+// ============================================================
+// ENTRY PREVIEW TABLE (Commissioner view)
+// ============================================================
+function renderEntryPreview() {
+  const wrap = document.getElementById('entry-preview-wrap');
+  if (!entries.length) {
+    wrap.innerHTML = `<div class="empty" style="padding:1.5rem;"><div class="ei" style="font-size:1.6rem">📋</div><p>No entries loaded yet.</p></div>`;
+    return;
+  }
+
+  const rows = entries.map((e,i) => {
+    const golferTags = e.players.map(id=>{
+      const g = GOLFERS.find(x=>x.id===id);
+      return `<span class="gtag">${g?g.last:'?'}</span>`;
+    }).join('');
+
+    const invalidTags = (e.warnings||[]).map(w=>`<span class="gtag invalid">⚠ ${w}</span>`).join('');
+    const salary = e.salary||0;
+    const overBudget = salary > BUDGET;
+
+    return `<tr>
+      <td style="font-weight:700;color:var(--black);text-transform:uppercase">${e.teamName}</td>
+      <td style="color:rgba(15,15,15,.55)">${e.entrantName||'–'}</td>
+      <td>${golferTags}${invalidTags}</td>
+      <td style="text-align:right;font-weight:700;color:${overBudget?'var(--red)':'var(--green-dark)'};white-space:nowrap">
+        $${salary.toLocaleString()}${overBudget?' ⚠':''}
+      </td>
+      <td style="text-align:center">
+        <span style="font-size:.65rem;color:rgba(15,15,15,.35);letter-spacing:.06em">${e.source||'manual'}</span>
+      </td>
+      <td>
+        <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<table class="preview-table">
+    <thead><tr>
+      <th>Entry</th><th>Entrant</th><th>Golfers</th><th style="text-align:right">Salary</th><th>Source</th><th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div style="margin-top:.5rem;font-size:.68rem;font-family:'Oswald',sans-serif;letter-spacing:.1em;color:rgba(15,15,15,.38)">
+    ${entries.length} TOTAL ENTRIES · ${entries.filter(e=>e.source==='sheet').length} FROM SHEET · ${entries.filter(e=>e.source!=='sheet').length} MANUAL
+  </div>`;
+}
+
+function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  entries = entries.filter(e=>e.id!==id);
+  save();
+  renderPool();
+  renderEntryPreview();
+  toast('Entry deleted');
+}
+
+// ============================================================
+// MANUAL ENTRY
+// ============================================================
+function addManualEntry() {
+  document.getElementById('manual-entry-card').classList.remove('hidden');
+  // Populate golfer dropdowns
+  const opts = GOLFERS.map(g=>`<option value="${g.id}">${g.name} · $${g.salary.toLocaleString()}</option>`).join('');
+  [1,2,3,4,5,6].forEach(n => {
+    document.getElementById('m-g'+n).innerHTML = `<option value="">Golfer ${n}…</option>${opts}`;
+  });
+}
+function cancelManualEntry() { document.getElementById('manual-entry-card').classList.add('hidden'); }
+function saveManualEntry() {
+  const teamName    = document.getElementById('m-entry-name').value.trim();
+  const entrantName = document.getElementById('m-your-name').value.trim();
+  if (!teamName) { toast('Enter an entry name'); return; }
+  const ids = [1,2,3,4,5,6].map(n=>parseInt(document.getElementById('m-g'+n).value)).filter(Boolean);
+  if (ids.length !== 6) { toast('Select all 6 golfers'); return; }
+  if (new Set(ids).size !== 6) { toast('No duplicate golfers'); return; }
+  const salary = ids.reduce((s,id)=>{const g=GOLFERS.find(x=>x.id===id);return s+(g?g.salary:0);},0);
+  if (salary > BUDGET) { toast('Over $50,000 salary cap'); return; }
+  entries.push({id:Date.now(), teamName, entrantName, players:ids, salary, source:'manual'});
+  save();
+  renderPool();
+  renderEntryPreview();
+  cancelManualEntry();
+  toast('Entry added: '+teamName);
+}
+
+// ============================================================
+// CLEAR / EXPORT / IMPORT
+// ============================================================
+function clearAllEntries() {
+  if (!confirm('Clear ALL entries? This cannot be undone.')) return;
+  entries = [];
+  save();
+  renderPool();
+  renderEntryPreview();
+  toast('All entries cleared');
+}
+function exportEntries() {
+  const blob = new Blob([JSON.stringify(entries, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'masters-pool-entries-2026.json';
+  a.click();
+}
+function importEntries() { document.getElementById('import-file').click(); }
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Invalid format');
+      entries = imported;
+      save();
+      renderPool();
+      renderEntryPreview();
+      toast(`Imported ${imported.length} entries`);
+    } catch(err) { toast('Import failed: '+err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ============================================================
+// PERSISTENCE
+// ============================================================
+function save() { localStorage.setItem('mp26_entries', JSON.stringify(entries)); }
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ============================================================
+// AUTO-REFRESH + INIT
+// ============================================================
+setInterval(()=>{
+  if (!document.getElementById('view-pool').classList.contains('hidden')) { fetchScores(); renderPool(); }
+}, REFRESH);
+
+// Restore saved sheet URL
+const savedUrl = localStorage.getItem('mp26_sheetUrl');
+if (savedUrl) document.getElementById('sheet-url').value = savedUrl;
+
+// Init
+document.getElementById('view-pool').classList.remove('hidden');
+document.getElementById('view-payouts').classList.add('hidden');
+document.getElementById('view-comm').classList.add('hidden');
+renderPool();
+renderEntryPreview();
+renderPayoutTab();
+fetchScores(true).catch(()=>{});
+</script>
+</body>
+</html>
