@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1775533107162,
+    "teamName": "Pat",
+    "entrantName": "Pat",
+    "players": [
+      3,
+      12,
+      18,
+      22,
+      31,
+      61
+    ],
+    "salary": 49500,
+    "source": "sheet"
+  },
+  {
+    "id": 1775533107164,
+    "teamName": "Blue",
+    "entrantName": "Blue",
+    "players": [
+      4,
+      11,
+      18,
+      26,
+      32,
+      35
+    ],
+    "salary": 50000,
+    "source": "sheet"
+  }
+]
