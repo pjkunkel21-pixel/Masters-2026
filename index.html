@@ -542,7 +542,7 @@ const GOLFERS = [
 // STATE
 // ============================================================
 // ↓ Paste your published Google Sheet CSV URL here ↓
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-gCe2rFpxfOZAQn7uislMA1HMv6hDRe6Zgr_vNt_rwSJGE2j8o4SVs9N66OEeuDTFrtPGcv6azyCL/pub?output=csv';
+const SHEET_URL = '';
 
 let entries  = [];
 let mScores  = {};
@@ -780,49 +780,51 @@ async function autoSyncSheet(force=false) {
     const parsed = parseCSV(csvText);
     if (!parsed.headers.length || !parsed.rows.length) return;
 
-    // Auto-detect columns
+    // Auto-detect columns — handles your sheet: Timestamp | Name | Select 6 Golfers
     const headers = parsed.headers;
+
+    // Find the golfer column — single cell with comma-separated names
     const singleGolferCol = headers.find(h =>
       /select.*(golfer|player)/i.test(h) ||
       /(golfer|player)s/i.test(h) ||
-      /pick.*(golfer|player)/i.test(h)
+      /pick.*(golfer|player)/i.test(h) ||
+      /golfer/i.test(h)
     );
 
-    function bestMatch(label, hdrs) {
-      const l = label.toLowerCase().replace(/\s/g,'');
-      let m = hdrs.find(h=>h.toLowerCase().replace(/\s/g,'')=== l);
-      if (m) return m;
-      m = hdrs.find(h=>h.toLowerCase().includes(label.toLowerCase()));
-      if (m) return m;
-      const num = label.match(/\d+/);
-      if (num) m = hdrs.find(h=>h.toLowerCase().includes('golfer')&&h.includes(num[0]));
-      if (m) return m;
-      return hdrs[0]||'';
-    }
-
-    const nameCol    = bestMatch('Your Name', headers) || bestMatch('Name', headers);
-    const entryCol   = bestMatch('Entry Name', headers) || nameCol;
+    // Find the name column — skip Timestamp, prefer exact "Name" match
+    const nameCol = headers.find(h => /^name$/i.test(h.trim()))
+      || headers.find(h => /your.?name/i.test(h))
+      || headers.find(h => /name/i.test(h) && !/timestamp|golfer|player/i.test(h))
+      || headers[1]; // fallback: second column (after Timestamp)
 
     const imported = [];
     parsed.rows.forEach((row, ri) => {
-      const entrantName = row[nameCol]||'';
-      const teamName    = row[entryCol] || entrantName;
+      const entrantName = (row[nameCol]||'').trim();
+      const teamName    = entrantName; // name serves as both
       if (!teamName) return;
 
       let golferNames;
       if (singleGolferCol) {
         golferNames = (row[singleGolferCol]||'').split(',').map(s=>s.trim()).filter(Boolean);
       } else {
-        golferNames = [1,2,3,4,5,6].map(n => row[bestMatch('Golfer '+n, headers)]||'').filter(Boolean);
+        // Fall back: try columns named Golfer 1 … Golfer 6
+        golferNames = [1,2,3,4,5,6].map(n => {
+          const col = headers.find(h => new RegExp('golfer.?'+n,'i').test(h));
+          return col ? (row[col]||'').trim() : '';
+        }).filter(Boolean);
       }
 
       const playerIds = [];
       const invalidNames = [];
       golferNames.forEach(gn => {
+        const gnl = gn.toLowerCase().trim();
         const g = GOLFERS.find(x =>
-          x.name.toLowerCase() === gn.toLowerCase() ||
-          x.name.toLowerCase().includes(gn.toLowerCase()) ||
-          gn.toLowerCase().includes(x.name.split(' ').pop().toLowerCase())
+          // exact full name
+          x.name.toLowerCase() === gnl ||
+          // submitted name contains full golfer name ("Scottie Scheffler Jr" still matches)
+          gnl.includes(x.name.toLowerCase()) ||
+          // golfer name contains submitted name (handles middle name omissions)
+          x.name.toLowerCase().includes(gnl)
         );
         if (g) playerIds.push(g.id);
         else invalidNames.push(gn);
