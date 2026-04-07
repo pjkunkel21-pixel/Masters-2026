@@ -313,6 +313,10 @@ body > * { position:relative; z-index:1; }
   <div class="comm-card">
     <div class="slabel">Step 2 &nbsp;·&nbsp; Connect Your Google Sheet</div>
 
+    <div class="info-box" id="baked-url-note" style="${SHEET_URL ? '' : 'display:none'}">
+      <strong>Auto-sync active</strong> — The sheet URL is baked into the app and syncs automatically for all visitors every 5 minutes. You can still manually sync below.
+    </div>
+
     <div class="inp-group" style="margin-bottom:.6rem;">
       <input type="text" class="board-inp" id="sheet-url" placeholder="Paste your published CSV URL here…">
       <button class="btn btn-g" onclick="syncSheet()"><span id="sync-spinner" class="spinner hidden"></span> Sync from Sheet</button>
@@ -537,12 +541,17 @@ const GOLFERS = [
 // ============================================================
 // STATE
 // ============================================================
-let entries  = JSON.parse(localStorage.getItem('mp26_entries') || '[]');
+// ↓ Paste your published Google Sheet CSV URL here ↓
+const SHEET_URL = '';
+
+let entries  = [];
 let mScores  = {};
-let sheetCols = null;   // detected column headers from last CSV parse
-let rawSheetRows = [];  // raw parsed rows
+let sheetCols = null;
+let rawSheetRows = [];
 let lastFetch = null;
-const REFRESH = 90000;
+let lastSheetFetch = null;
+const REFRESH = 90000;        // score refresh: 90 seconds
+const SHEET_REFRESH = 300000; // entry refresh: 5 minutes
 
 // ============================================================
 // TABS
@@ -753,7 +762,95 @@ function renderPayoutTab() {
 }
 
 // ============================================================
-// GOOGLE SHEET SYNC
+// AUTO SHEET SYNC (runs for all visitors on load + every 5min)
+// ============================================================
+async function autoSyncSheet(force=false) {
+  const url = SHEET_URL || localStorage.getItem('mp26_sheetUrl');
+  if (!url) return;
+  if (!force && lastSheetFetch && Date.now()-lastSheetFetch < SHEET_REFRESH) return;
+  lastSheetFetch = Date.now();
+
+  try {
+    let csvText = null;
+    const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+    try { const r = await fetch(url); if (r.ok) csvText = await r.text(); } catch(e) {}
+    if (!csvText) { const r = await fetch(proxyUrl); if (r.ok) csvText = await r.text(); }
+    if (!csvText) return;
+
+    const parsed = parseCSV(csvText);
+    if (!parsed.headers.length || !parsed.rows.length) return;
+
+    // Auto-detect columns
+    const headers = parsed.headers;
+    const singleGolferCol = headers.find(h =>
+      /select.*(golfer|player)/i.test(h) ||
+      /(golfer|player)s/i.test(h) ||
+      /pick.*(golfer|player)/i.test(h)
+    );
+
+    function bestMatch(label, hdrs) {
+      const l = label.toLowerCase().replace(/\s/g,'');
+      let m = hdrs.find(h=>h.toLowerCase().replace(/\s/g,'')=== l);
+      if (m) return m;
+      m = hdrs.find(h=>h.toLowerCase().includes(label.toLowerCase()));
+      if (m) return m;
+      const num = label.match(/\d+/);
+      if (num) m = hdrs.find(h=>h.toLowerCase().includes('golfer')&&h.includes(num[0]));
+      if (m) return m;
+      return hdrs[0]||'';
+    }
+
+    const nameCol    = bestMatch('Your Name', headers) || bestMatch('Name', headers);
+    const entryCol   = bestMatch('Entry Name', headers) || nameCol;
+
+    const imported = [];
+    parsed.rows.forEach((row, ri) => {
+      const entrantName = row[nameCol]||'';
+      const teamName    = row[entryCol] || entrantName;
+      if (!teamName) return;
+
+      let golferNames;
+      if (singleGolferCol) {
+        golferNames = (row[singleGolferCol]||'').split(',').map(s=>s.trim()).filter(Boolean);
+      } else {
+        golferNames = [1,2,3,4,5,6].map(n => row[bestMatch('Golfer '+n, headers)]||'').filter(Boolean);
+      }
+
+      const playerIds = [];
+      const invalidNames = [];
+      golferNames.forEach(gn => {
+        const g = GOLFERS.find(x =>
+          x.name.toLowerCase() === gn.toLowerCase() ||
+          x.name.toLowerCase().includes(gn.toLowerCase()) ||
+          gn.toLowerCase().includes(x.name.split(' ').pop().toLowerCase())
+        );
+        if (g) playerIds.push(g.id);
+        else invalidNames.push(gn);
+      });
+
+      const salary = playerIds.reduce((s,id)=>{const g=GOLFERS.find(x=>x.id===id);return s+(g?g.salary:0);},0);
+      imported.push({
+        id: Date.now() + ri,
+        teamName, entrantName,
+        players: playerIds, salary,
+        source: 'sheet',
+        warnings: invalidNames.length ? invalidNames : undefined
+      });
+    });
+
+    if (imported.length) {
+      const manual = entries.filter(e=>e.source!=='sheet');
+      entries = [...manual, ...imported];
+      renderPool();
+      renderEntryPreview();
+    }
+  } catch(err) {
+    console.warn('Auto sheet sync failed:', err);
+  }
+}
+
+// ============================================================
+// GOOGLE SHEET SYNC (Commissioner manual sync)
 // ============================================================
 function setSyncStatus(state, msg) {
   const dot = document.getElementById('sync-dot');
@@ -1100,20 +1197,27 @@ function toast(msg) {
 // AUTO-REFRESH + INIT
 // ============================================================
 setInterval(()=>{
-  if (!document.getElementById('view-pool').classList.contains('hidden')) { fetchScores(); renderPool(); }
+  if (!document.getElementById('view-pool').classList.contains('hidden')) {
+    fetchScores();
+    autoSyncSheet();
+    renderPool();
+  }
 }, REFRESH);
 
-// Restore saved sheet URL
-const savedUrl = localStorage.getItem('mp26_sheetUrl');
+// Restore saved sheet URL into commissioner input
+const savedUrl = SHEET_URL || localStorage.getItem('mp26_sheetUrl');
 if (savedUrl) document.getElementById('sheet-url').value = savedUrl;
 
 // Init
 document.getElementById('view-pool').classList.remove('hidden');
 document.getElementById('view-payouts').classList.add('hidden');
 document.getElementById('view-comm').classList.add('hidden');
+renderPayoutTab();
+// Load entries from sheet first, fall back to localStorage while fetching
+entries = JSON.parse(localStorage.getItem('mp26_entries') || '[]');
 renderPool();
 renderEntryPreview();
-renderPayoutTab();
+autoSyncSheet(true).then(()=>{ renderPool(); renderEntryPreview(); }).catch(()=>{});
 fetchScores(true).catch(()=>{});
 </script>
 </body>
