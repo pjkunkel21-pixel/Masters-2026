@@ -352,7 +352,9 @@ body > * { position:relative; z-index:1; }
       <button class="btn btn-red btn-sm" onclick="clearAllEntries()">Clear All Entries</button>
       <button class="btn btn-o btn-sm" onclick="exportEntries()">Export JSON</button>
       <button class="btn btn-o btn-sm" onclick="importEntries()">Import JSON</button>
+      <button class="btn btn-o btn-sm" onclick="debugESPN()">🔍 Debug Scores</button>
     </div>
+    <pre id="debug-out" style="display:none;margin-top:.75rem;background:#111;color:#9f9;font-size:.65rem;padding:.75rem;border-radius:3px;overflow:auto;max-height:300px;white-space:pre-wrap;word-break:break-all"></pre>
     <input type="file" id="import-file" accept=".json" class="hidden" onchange="handleImport(event)">
   </div>
 
@@ -542,7 +544,7 @@ const GOLFERS = [
 // STATE
 // ============================================================
 // ↓ Paste your published Google Sheet CSV URL here ↓
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-gCe2rFpxfOZAQn7uislMA1HMv6hDRe6Zgr_vNt_rwSJGE2j8o4SVs9N66OEeuDTFrtPGcv6azyCL/pub?output=csv';
+const SHEET_URL = '';
 
 let entries  = [];
 let mScores  = {};
@@ -685,49 +687,51 @@ function toggleExp(id) { const r=document.getElementById(id); if(r) r.classList.
 async function fetchScores(force=false) {
   if (!force && lastFetch && Date.now()-lastFetch < REFRESH) return;
   lastFetch = Date.now();
-  try {
-    const URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?tournamentId=401811941';
-    const resp = await fetch(URL);
-    if (!resp.ok) throw new Error('ESPN fetch failed');
-    const data = await resp.json();
 
-    const tourn = data.tournaments?.[0] || data;
-    const competitors = tourn.leaderboard || tourn.competitors || [];
+  const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?tournamentId=401811941';
+  const PROXY    = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(ESPN_URL);
+
+  let data = null;
+  try {
+    // Try direct first (works locally), then proxy (needed for GitHub Pages / CORS)
+    for (const url of [ESPN_URL, PROXY]) {
+      try {
+        const r = await fetch(url);
+        if (r.ok) { data = await r.json(); break; }
+      } catch(e) {}
+    }
+    if (!data) return;
+
+    // ESPN leaderboard structure: data.events[0].competitions[0].competitors
+    const event       = data.events?.[0];
+    const competition = event?.competitions?.[0];
+    const competitors = competition?.competitors || [];
     if (!competitors.length) return;
 
-    // Determine tournament status
-    const status = tourn.status?.type?.name || tourn.status?.type?.description || '';
-    const round  = tourn.currentRound || tourn.round || 0;
-    const isLive = /progress/i.test(status) || /active/i.test(status);
-    const isDone = /final|complete/i.test(status);
+    const status  = competition?.status?.type?.name || '';
+    const round   = competition?.status?.period || event?.status?.period || 1;
+    const isLive  = /progress/i.test(status) || /active/i.test(status);
+    const isDone  = /final|complete/i.test(status);
 
     mScores = {};
     competitors.forEach(c => {
-      const name = c.athlete?.displayName || c.displayName || '';
+      const name = c.athlete?.displayName || '';
       if (!name) return;
 
-      // Position
-      const posRaw = c.sortOrder || c.standing?.rank || 999;
-      const posStr = c.status === 'cut' ? 'CUT' : (c.displayValue || c.standing?.displayValue || String(posRaw));
-      const isCut  = c.status === 'cut' || posStr === 'CUT';
+      const posRaw = parseInt(c.status?.position?.id || c.linescores?.[0]?.rank || 999);
+      const posStr = c.status?.position?.displayName || String(posRaw);
+      const isCut  = /cut/i.test(posStr) || c.status?.type?.name === 'cut';
 
-      // Score to par (total)
-      const total = typeof c.totalScore === 'number' ? c.totalScore
-                  : typeof c.score?.value === 'number' ? c.score.value
-                  : parseInt(c.linescores?.reduce((s,l)=>s+(l.value||0),0)||0);
+      // Score to par — ESPN stores as string e.g. "-5", "E", "+3"
+      const scoreStr = c.score?.displayValue || c.statistics?.find(s=>s.name==='scoreToPar')?.displayValue || 'E';
+      const total    = scoreStr === 'E' ? 0 : parseInt(scoreStr) || 0;
 
-      // Today's score
-      const today = typeof c.linescores === 'object'
-        ? (c.linescores?.[round-1]?.value ?? 0)
-        : 0;
-
-      // Thru
-      const thru = c.thru || c.status || '--';
+      const thruVal  = c.status?.thru || c.status?.displayValue || '--';
+      const thru     = thruVal === '18' || thruVal === 'F' ? 'F' : thruVal;
 
       mScores[name] = {
-        name, pos: posRaw, posStr, total, today,
-        thru: thru === '18' ? 'F' : thru,
-        cut: isCut,
+        name, pos: isCut ? 999 : posRaw, posStr,
+        total, thru, cut: isCut,
         earnings: payoutForPos(isCut ? 999 : posRaw, isCut)
       };
     });
@@ -1103,6 +1107,24 @@ function renderEntryPreview() {
   <div style="margin-top:.5rem;font-size:.68rem;font-family:'Oswald',sans-serif;letter-spacing:.1em;color:rgba(15,15,15,.38)">
     ${entries.length} TOTAL ENTRIES · ${entries.filter(e=>e.source==='sheet').length} FROM SHEET · ${entries.filter(e=>e.source!=='sheet').length} MANUAL
   </div>`;
+}
+
+async function debugESPN() {
+  const out = document.getElementById('debug-out');
+  out.style.display = 'block';
+  out.textContent = 'Fetching ESPN...';
+  const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?tournamentId=401811941';
+  const PROXY = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(ESPN_URL);
+  for (const [label, url] of [['DIRECT', ESPN_URL], ['PROXY', PROXY]]) {
+    try {
+      const r = await fetch(url);
+      const text = await r.text();
+      out.textContent = `[${label}] status=${r.status}\n` + text.slice(0, 3000);
+      if (r.ok) return;
+    } catch(e) {
+      out.textContent += `\n[${label}] ERROR: ${e.message}`;
+    }
+  }
 }
 
 function deleteEntry(id) {
