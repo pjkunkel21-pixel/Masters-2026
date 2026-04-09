@@ -717,14 +717,17 @@ async function fetchScores(force=false) {
       const name = c.athlete?.displayName || '';
       if (!name) return;
 
-      const isCut    = /cut/i.test(c.status?.type?.name || '');
-      const posRaw   = isCut ? 999 : (c.sortOrder || 999);
-      const posStr   = isCut ? 'CUT' : (c.status?.position?.displayName || String(posRaw));
+      const isCut  = /cut/i.test(c.status?.type?.name || '');
 
-      // score.value is strokes-to-par (negative = under par)
-      const total    = typeof c.score?.value === 'number' ? c.score.value : 0;
-      const thruRaw  = c.status?.thru ?? 0;
-      const thru     = thruRaw === 18 ? 'F' : (thruRaw === 0 ? '--' : String(thruRaw));
+      // Use status.position.id for actual leaderboard position
+      const posId  = parseInt(c.status?.position?.id);
+      const posRaw = isCut ? 999 : (posId > 0 ? posId : 999);
+      const posStr = isCut ? 'CUT' : (c.status?.position?.displayName || (posRaw < 999 ? String(posRaw) : '--'));
+
+      // score.value is strokes-to-par as a number
+      const total  = typeof c.score?.value === 'number' ? c.score.value : 0;
+      const thruRaw = c.status?.thru ?? 0;
+      const thru   = thruRaw === 18 ? 'F' : (thruRaw === 0 ? '--' : String(thruRaw));
 
       mScores[name] = {
         name, pos: posRaw, posStr, total, thru, cut: isCut,
