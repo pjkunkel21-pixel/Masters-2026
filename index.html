@@ -645,7 +645,8 @@ function renderPool() {
 
     const stp = e.calc.scoreToPar;
     const stpDisp = stp === null ? '–' : (stp === 0 ? 'E' : (stp > 0 ? '+'+stp : ''+stp));
-    const stpClass = stp === null ? '' : (stp < 0 ? 'style="color:var(--red);font-weight:700"' : stp > 0 ? 'style="color:var(--black);font-weight:700"' : 'style="color:var(--black);font-weight:700"');
+    const stpColor = stp === null ? 'rgba(15,15,15,.35)' : stp < 0 ? 'var(--red)' : stp > 0 ? 'var(--black)' : 'var(--green)';
+    const stpClass = `style="color:${stpColor};font-weight:700"`;
 
     return `
     <tr class="pool-row" onclick="toggleExp('ex${e.id}')">
