@@ -195,7 +195,6 @@ body > * { position:relative; z-index:1; }
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media(max-width:600px){
-  .pool-table .ch:nth-child(4),.pool-row td:nth-child(4){display:none;}
   .col-map { grid-template-columns:1fr; }
 }
 </style>
@@ -544,7 +543,7 @@ const GOLFERS = [
 // STATE
 // ============================================================
 // ↓ Paste your published Google Sheet CSV URL here ↓
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-gCe2rFpxfOZAQn7uislMA1HMv6hDRe6Zgr_vNt_rwSJGE2j8o4SVs9N66OEeuDTFrtPGcv6azyCL/pub?output=csv';
+const SHEET_URL = '';
 
 let entries  = [];
 let mScores  = {};
@@ -657,7 +656,6 @@ function renderPool() {
       </td>
       <td class="p-earn" style="font-size:1rem;text-align:right" ${stpClass}>${stpDisp}</td>
       <td class="p-earn${total===0?' zero':''}">${total>0 ? fmtMoneyFull(total) : '–'}</td>
-      <td class="p-cap">$${(BUDGET-spent).toLocaleString()} left</td>
     </tr>
     <tr class="exp-row" id="ex${e.id}"><td colspan="5"><div class="exp-inner">
       <div class="roster-grid">
@@ -687,7 +685,6 @@ function renderPool() {
       <th class="ch left">Entry</th>
       <th class="ch" onclick="setPoolSort('score')" style="cursor:pointer;user-select:none">Score ${poolSort==='score'?'▲':''}</th>
       <th class="ch" onclick="setPoolSort('earnings')" style="cursor:pointer;user-select:none">Total Earnings ${poolSort==='earnings'?'▼':''}</th>
-      <th class="ch">Salary Left</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
