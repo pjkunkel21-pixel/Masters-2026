@@ -593,10 +593,12 @@ function showTab(t) {
 // ============================================================
 // POOL RENDER
 // ============================================================
+let poolSort = 'earnings'; // 'earnings' or 'score'
+
 function getPlayerData(golferId) {
   const g = GOLFERS.find(x=>x.id===golferId);
-  if (!g) return {earnings:0, posStr:'–', thru:'–', cut:false};
-  return mScores[g.name] || {earnings:0, posStr:'–', thru:'–', cut:false};
+  if (!g) return {earnings:0, posStr:'–', thru:'–', cut:false, total:0};
+  return mScores[g.name] || {earnings:0, posStr:'–', thru:'–', cut:false, total:0};
 }
 
 function calcEntry(e) {
@@ -622,7 +624,17 @@ function renderPool() {
     document.getElementById('pool-upd').textContent = '–';
     return;
   }
-  const scored = entries.map(e=>({...e, calc:calcEntry(e)})).sort((a,b)=>b.calc.total-a.calc.total);
+  const scored = entries.map(e=>({...e, calc:calcEntry(e)})).sort((a,b)=> {
+    if (poolSort === 'score') {
+      // Sort by score-to-par ascending (lower is better); null (not started) goes last
+      const sa = a.calc.scoreToPar, sb = b.calc.scoreToPar;
+      if (sa === null && sb === null) return b.calc.total - a.calc.total;
+      if (sa === null) return 1;
+      if (sb === null) return -1;
+      return sa - sb;
+    }
+    return b.calc.total - a.calc.total; // earnings descending
+  });
   let pos = 1;
   const rows = scored.map((e,i)=>{
     if (i>0 && scored[i].calc.total !== scored[i-1].calc.total) pos = i+1;
@@ -672,14 +684,16 @@ function renderPool() {
     <thead><tr>
       <th class="ch center" style="width:2.4rem">Pos</th>
       <th class="ch left">Entry</th>
-      <th class="ch">Score</th>
-      <th class="ch">Total Earnings</th>
+      <th class="ch" onclick="setPoolSort('score')" style="cursor:pointer;user-select:none">Score ${poolSort==='score'?'▲':''}</th>
+      <th class="ch" onclick="setPoolSort('earnings')" style="cursor:pointer;user-select:none">Total Earnings ${poolSort==='earnings'?'▼':''}</th>
       <th class="ch">Salary Left</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
   document.getElementById('pool-upd').textContent = 'Updated ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
+
+function setPoolSort(col) { poolSort = col; renderPool(); }
 
 function toggleExp(id) { const r=document.getElementById(id); if(r) r.classList.toggle('open'); }
 
@@ -726,8 +740,9 @@ async function fetchScores(force=false) {
       const posRaw = isCut ? 999 : (posId > 0 ? posId : 999);
       const posStr = isCut ? 'CUT' : (c.status?.position?.displayName || (posRaw < 999 ? String(posRaw) : '--'));
 
-      // score.value is strokes-to-par as a number
-      const total  = typeof c.score?.value === 'number' ? c.score.value : 0;
+      // score-to-par is in statistics array, NOT score.value (which is raw strokes)
+      const stpStat = c.statistics?.find(s => s.name === 'scoreToPar');
+      const total   = stpStat ? (typeof stpStat.value === 'number' ? stpStat.value : 0) : 0;
       const thruRaw = c.status?.thru ?? 0;
       const thru   = thruRaw === 18 ? 'F' : (thruRaw === 0 ? '--' : String(thruRaw));
 
