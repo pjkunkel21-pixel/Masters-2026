@@ -688,50 +688,46 @@ async function fetchScores(force=false) {
   if (!force && lastFetch && Date.now()-lastFetch < REFRESH) return;
   lastFetch = Date.now();
 
-  const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/leaderboard?tournamentId=401811941';
+  const ESPN_URL = 'https://site.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga';
   const PROXY    = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(ESPN_URL);
 
   let data = null;
-  try {
-    // Try direct first (works locally), then proxy (needed for GitHub Pages / CORS)
-    for (const url of [ESPN_URL, PROXY]) {
-      try {
-        const r = await fetch(url);
-        if (r.ok) { data = await r.json(); break; }
-      } catch(e) {}
-    }
-    if (!data) return;
+  for (const url of [ESPN_URL, PROXY]) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) { data = await r.json(); break; }
+    } catch(e) {}
+  }
+  if (!data) return;
 
-    // ESPN leaderboard structure: data.events[0].competitions[0].competitors
+  try {
     const event       = data.events?.[0];
     const competition = event?.competitions?.[0];
     const competitors = competition?.competitors || [];
     if (!competitors.length) return;
 
-    const status  = competition?.status?.type?.name || '';
-    const round   = competition?.status?.period || event?.status?.period || 1;
-    const isLive  = /progress/i.test(status) || /active/i.test(status);
-    const isDone  = /final|complete/i.test(status);
+    const compStatus = competition?.status;
+    const round      = compStatus?.period || 1;
+    const stateName  = compStatus?.type?.state || '';
+    const isLive     = stateName === 'in';
+    const isDone     = compStatus?.type?.completed === true;
 
     mScores = {};
     competitors.forEach(c => {
       const name = c.athlete?.displayName || '';
       if (!name) return;
 
-      const posRaw = parseInt(c.status?.position?.id || c.linescores?.[0]?.rank || 999);
-      const posStr = c.status?.position?.displayName || String(posRaw);
-      const isCut  = /cut/i.test(posStr) || c.status?.type?.name === 'cut';
+      const isCut    = /cut/i.test(c.status?.type?.name || '');
+      const posRaw   = isCut ? 999 : (c.sortOrder || 999);
+      const posStr   = isCut ? 'CUT' : (c.status?.position?.displayName || String(posRaw));
 
-      // Score to par — ESPN stores as string e.g. "-5", "E", "+3"
-      const scoreStr = c.score?.displayValue || c.statistics?.find(s=>s.name==='scoreToPar')?.displayValue || 'E';
-      const total    = scoreStr === 'E' ? 0 : parseInt(scoreStr) || 0;
-
-      const thruVal  = c.status?.thru || c.status?.displayValue || '--';
-      const thru     = thruVal === '18' || thruVal === 'F' ? 'F' : thruVal;
+      // score.value is strokes-to-par (negative = under par)
+      const total    = typeof c.score?.value === 'number' ? c.score.value : 0;
+      const thruRaw  = c.status?.thru ?? 0;
+      const thru     = thruRaw === 18 ? 'F' : (thruRaw === 0 ? '--' : String(thruRaw));
 
       mScores[name] = {
-        name, pos: isCut ? 999 : posRaw, posStr,
-        total, thru, cut: isCut,
+        name, pos: posRaw, posStr, total, thru, cut: isCut,
         earnings: payoutForPos(isCut ? 999 : posRaw, isCut)
       };
     });
@@ -740,7 +736,7 @@ async function fetchScores(force=false) {
     const st = isDone ? 'completed' : isLive ? 'in_progress' : 'not_started';
     updateBadge(st, round);
   } catch(err) {
-    console.warn('Score fetch error:', err);
+    console.warn('Score parse error:', err);
   }
 }
 
