@@ -605,11 +605,13 @@ function calcEntry(e) {
     return {id, earnings: d.earnings||0, total: typeof d.total === 'number' ? d.total : null, data: d};
   });
   const total = rows.reduce((s,r)=>s+r.earnings, 0);
-  const scoredPlayers = rows.filter(r => r.total !== null && !r.data.cut);
-  const scoreToPar = scoredPlayers.length > 0 ? rows.reduce((s,r) => {
-    if (r.data.cut) return s + 0; // missed cut counts as 0 relative contribution
-    return s + (typeof r.total === 'number' ? r.total : 0);
-  }, 0) : null;
+
+  // Only include players who have actually started (thru !== '--' and not pre-tee)
+  const startedRows = rows.filter(r => !r.data.cut && r.data.thru && r.data.thru !== '--' && r.data.thru !== '');
+  const scoreToPar = startedRows.length > 0
+    ? startedRows.reduce((s,r) => s + (r.total || 0), 0)
+    : null;
+
   return {total, rows, scoreToPar};
 }
 
