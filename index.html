@@ -313,7 +313,7 @@ body > * { position:relative; z-index:1; }
   <div class="comm-card">
     <div class="slabel">Step 2 &nbsp;·&nbsp; Connect Your Google Sheet</div>
 
-    <div class="info-box" id="baked-url-note" style="${SHEET_URL ? '' : 'display:none'}">
+    <div class="info-box" id="baked-url-note" style="display:none">
       <strong>Auto-sync active</strong> — The sheet URL is baked into the app and syncs automatically for all visitors every 5 minutes. You can still manually sync below.
     </div>
 
@@ -1231,6 +1231,9 @@ setInterval(()=>{
 // Restore saved sheet URL into commissioner input
 const savedUrl = SHEET_URL || localStorage.getItem('mp26_sheetUrl');
 if (savedUrl) document.getElementById('sheet-url').value = savedUrl;
+
+// Show baked URL note if URL is set
+if (SHEET_URL) { const n = document.getElementById('baked-url-note'); if(n) n.style.display=''; }
 
 // Init
 document.getElementById('view-pool').classList.remove('hidden');
