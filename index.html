@@ -607,8 +607,18 @@ function calcEntry(e) {
   });
   const total = rows.reduce((s,r)=>s+r.earnings, 0);
 
-  // Only include players who have actually started (thru !== '--' and not pre-tee)
-  const startedRows = rows.filter(r => !r.data.cut && r.data.thru && r.data.thru !== '--' && r.data.thru !== '');
+  // Include players who have a real score — either actively playing (thru > 0),
+  // finished a round (thru = 18 = 'F'), or between rounds (thru = 0 but score != 0 or posStr != '-')
+  const startedRows = rows.filter(r => {
+    if (r.data.cut) return false;
+    const thru = r.data.thru;
+    const posStr = r.data.posStr;
+    // Actively playing or finished holes
+    if (thru && thru !== '--' && thru !== '') return true;
+    // Between rounds: has a real position (not '-' or '--')
+    if (posStr && posStr !== '-' && posStr !== '--' && posStr !== '–') return true;
+    return false;
+  });
   const scoreToPar = startedRows.length > 0
     ? startedRows.reduce((s,r) => s + (r.total || 0), 0)
     : null;
