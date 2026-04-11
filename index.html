@@ -448,7 +448,7 @@ const GOLFERS = [
   {id:2,  name:"Rory McIlroy",                last:"McILROY",          salary:11600},
   {id:3,  name:"Bryson DeChambeau",           last:"DeCHAMBEAU",       salary:10200},
   {id:4,  name:"Jon Rahm",                    last:"RAHM",             salary:10000},
-  {id:5,  name:"Ludvig Aberg",                last:"ÅBERG",            salary:9800},
+  {id:5,  name:"Ludvig Åberg",                last:"ÅBERG",            salary:9800},
   {id:6,  name:"Xander Schauffele",           last:"SCHAUFFELE",       salary:9600},
   {id:7,  name:"Collin Morikawa",             last:"MORIKAWA",         salary:9500},
   {id:8,  name:"Tommy Fleetwood",             last:"FLEETWOOD",        salary:9300},
@@ -847,15 +847,11 @@ async function autoSyncSheet(force=false) {
       const playerIds = [];
       const invalidNames = [];
       golferNames.forEach(gn => {
-        const gnl = gn.toLowerCase().trim();
-        const g = GOLFERS.find(x =>
-          // exact full name
-          x.name.toLowerCase() === gnl ||
-          // submitted name contains full golfer name ("Scottie Scheffler Jr" still matches)
-          gnl.includes(x.name.toLowerCase()) ||
-          // golfer name contains submitted name (handles middle name omissions)
-          x.name.toLowerCase().includes(gnl)
-        );
+        const gnl = gn.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        const g = GOLFERS.find(x => {
+          const xn = x.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+          return xn === gnl || gnl.includes(xn) || xn.includes(gnl);
+        });
         if (g) playerIds.push(g.id);
         else invalidNames.push(gn);
       });
