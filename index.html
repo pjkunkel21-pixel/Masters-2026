@@ -543,7 +543,7 @@ const GOLFERS = [
 // STATE
 // ============================================================
 // ↓ Paste your published Google Sheet CSV URL here ↓
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-gCe2rFpxfOZAQn7uislMA1HMv6hDRe6Zgr_vNt_rwSJGE2j8o4SVs9N66OEeuDTFrtPGcv6azyCL/pub?output=csv';
+const SHEET_URL = '';
 
 let entries  = [];
 let mScores  = {};
@@ -738,9 +738,11 @@ async function fetchScores(force=false) {
       const posRaw = isCut ? 999 : (posId > 0 ? posId : 999);
       const posStr = isCut ? 'CUT' : (c.status?.position?.displayName || (posRaw < 999 ? String(posRaw) : '--'));
 
-      // score-to-par is in statistics array, NOT score.value (which is raw strokes)
-      const stpStat = c.statistics?.find(s => s.name === 'scoreToPar');
-      const total   = stpStat ? (typeof stpStat.value === 'number' ? stpStat.value : 0) : 0;
+      // score.value is now score-to-par (ESPN changed format mid-tournament)
+      // Use displayValue to parse correctly: "E" = 0, "+6" = 6, "-3" = -3
+      const scoreDisp = c.score?.displayValue || 'E';
+      const total = scoreDisp === 'E' || scoreDisp === '-' ? 0
+                  : parseInt(scoreDisp) || 0;
       const thruRaw = c.status?.thru ?? 0;
       const thru   = thruRaw === 18 ? 'F' : (thruRaw === 0 ? '--' : String(thruRaw));
 
