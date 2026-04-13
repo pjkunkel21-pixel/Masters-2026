@@ -224,7 +224,7 @@ body > * { position:relative; z-index:1; }
     </div>
     <div class="board-inner" id="pool-inner"></div>
     <div class="board-foot">
-      <span>★ In Pool &nbsp;·&nbsp; 2025 Payout Structure</span>
+      <span>★ In Pool &nbsp;·&nbsp; 2026 Payout Structure</span>
       <span id="pool-upd">–</span>
       <span>Tap entry to expand</span>
     </div>
@@ -240,7 +240,7 @@ body > * { position:relative; z-index:1; }
   <div class="board-shell">
     <div class="board-arch">
       <div class="arch-title">Prize Money</div>
-      <div class="arch-sub">2025 Payout Structure · $21M Purse · Applied to 2026 Pool</div>
+      <div class="arch-sub">2026 Payout Structure · $22.5M Purse</div>
     </div>
     <div style="background:var(--board-white);padding:1rem 1.2rem;">
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.3rem .8rem;" id="payout-grid-full"></div>
@@ -387,40 +387,78 @@ body > * { position:relative; z-index:1; }
 
 <script>
 // ============================================================
-// PAYOUT TABLE (2025 Masters · $21M purse)
+// PAYOUT TABLE (2026 Masters · $22.5M purse)
 // ============================================================
 const PAYOUT_DISPLAY = [
-  {label:'1st',    amt:4200000},
-  {label:'2nd',    amt:2268000},
-  {label:'3rd',    amt:1428000},
-  {label:'4th',    amt:1008000},
-  {label:'T-5th',  amt:798000},
-  {label:'7th',    amt:703500},
-  {label:'T-8th',  amt:588000},
-  {label:'T-12th', amt:462000},
-  {label:'T-14th', amt:336000},
-  {label:'T-21st', amt:210000},
-  {label:'T-27th', amt:158550},
-  {label:'T-29th', amt:142800},
-  {label:'T-32nd', amt:121538},
-  {label:'T-36th', amt:101063},
-  {label:'T-40th', amt:88200},
-  {label:'T-42nd', amt:75600},
-  {label:'T-46th', amt:61180},
-  {label:'49th',   amt:54600},
-  {label:'50th',   amt:52920},
-  {label:'51st+',  amt:51660, note:'descending'},
+  {label:'1st',  amt:4500000},
+  {label:'2nd',  amt:2430000},
+  {label:'3rd',  amt:1530000},
+  {label:'4th',  amt:1080000},
+  {label:'5th',  amt:900000},
+  {label:'6th',  amt:810000},
+  {label:'7th',  amt:753750},
+  {label:'8th',  amt:697500},
+  {label:'9th',  amt:652500},
+  {label:'10th', amt:607500},
+  {label:'11th', amt:562500},
+  {label:'12th', amt:517500},
+  {label:'13th', amt:472500},
+  {label:'14th', amt:427500},
+  {label:'15th', amt:405000},
+  {label:'16th', amt:382500},
+  {label:'17th', amt:360000},
+  {label:'18th', amt:337500},
+  {label:'19th', amt:315000},
+  {label:'20th', amt:292500},
+  {label:'21st', amt:270000},
+  {label:'22nd', amt:252000},
+  {label:'23rd', amt:234000},
+  {label:'24th', amt:216000},
+  {label:'25th', amt:198000},
+  {label:'26th', amt:180000},
+  {label:'27th', amt:173250},
+  {label:'28th', amt:166500},
+  {label:'29th', amt:159750},
+  {label:'30th', amt:153000},
+  {label:'31st', amt:146250},
+  {label:'32nd', amt:139500},
+  {label:'33rd', amt:132750},
+  {label:'34th', amt:127125},
+  {label:'35th', amt:121500},
+  {label:'36th', amt:115875},
+  {label:'37th', amt:110250},
+  {label:'38th', amt:105750},
+  {label:'39th', amt:101250},
+  {label:'40th', amt:96750},
+  {label:'41st', amt:92250},
+  {label:'42nd', amt:87750},
+  {label:'43rd', amt:83250},
+  {label:'44th', amt:78750},
+  {label:'45th', amt:74250},
+  {label:'46th', amt:69750},
+  {label:'47th', amt:65250},
+  {label:'48th', amt:61650},
+  {label:'49th', amt:58500},
+  {label:'50th', amt:56700},
   {label:'Missed Cut', amt:25000},
   {label:'Amateur',    amt:0},
 ];
 
 // Position → earnings lookup
 const POS_BRACKETS = [
-  [1,4200000],[2,2268000],[3,1428000],[4,1008000],
-  [6,798000],[7,703500],[11,588000],[13,462000],
-  [20,336000],[26,210000],[28,158550],[31,142800],
-  [35,121538],[39,101063],[41,88200],[45,75600],
-  [48,61180],[49,54600],[50,52920],[999,51660]
+  [1,4500000],[2,2430000],[3,1530000],[4,1080000],
+  [5,900000],[6,810000],[7,753750],[8,697500],
+  [9,652500],[10,607500],[11,562500],[12,517500],
+  [13,472500],[14,427500],[15,405000],[16,382500],
+  [17,360000],[18,337500],[19,315000],[20,292500],
+  [21,270000],[22,252000],[23,234000],[24,216000],
+  [25,198000],[26,180000],[27,173250],[28,166500],
+  [29,159750],[30,153000],[31,146250],[32,139500],
+  [33,132750],[34,127125],[35,121500],[36,115875],
+  [37,110250],[38,105750],[39,101250],[40,96750],
+  [41,92250],[42,87750],[43,83250],[44,78750],
+  [45,74250],[46,69750],[47,65250],[48,61650],
+  [49,58500],[50,56700],[999,25000]
 ];
 function payoutForPos(pos, cut) {
   if (cut) return 25000;
@@ -428,7 +466,7 @@ function payoutForPos(pos, cut) {
   for (const [maxPos, amt] of POS_BRACKETS) {
     if (pos <= maxPos) return amt;
   }
-  return Math.max(25001, 51660 - (pos - 51) * 450);
+  return 0;
 }
 
 function fmtMoney(n) {
@@ -543,7 +581,7 @@ const GOLFERS = [
 // STATE
 // ============================================================
 // ↓ Paste your published Google Sheet CSV URL here ↓
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT-gCe2rFpxfOZAQn7uislMA1HMv6hDRe6Zgr_vNt_rwSJGE2j8o4SVs9N66OEeuDTFrtPGcv6azyCL/pub?output=csv';
+const SHEET_URL = '';
 
 let entries  = [];
 let mScores  = {};
